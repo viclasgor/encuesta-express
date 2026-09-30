@@ -46,3 +46,11 @@
 - **IA falló en / corregí:** nada en esta tarea; desviación consciente: `% fila/columna` en sidebar (visible siempre con ayuda) en vez de solo en Cruces, por pedirlo el punto 2.
 - **Cómo lo detecté:** `pytest -q` (incluye render AppTest con ejemplo y en vacío); health 200; modo claro fijado en tema (oscuro no verificado).
 - **Decisión técnica mía:** sin CSS custom (no imprescindible); ZIP en vez de más botones; `width="stretch"` en lugar del deprecado `use_container_width`.
+
+---
+### 2026-09-30 — Quitar aviso de columnas ignoradas
+- **Pedí (resumen):** al ignorar una columna no mostrar ningún mensaje, solo ignorarla; anotarlo en PROMPT-LOG.
+- **IA hizo bien:** eliminado el `st.info` de Resumen; el resto (sugerencia en tipos, exclusión del informe) intacto.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** reporte del usuario en navegador + `pytest -q` y arranque tras el cambio.
+- **Decisión técnica mía:** ninguna; cambio solo de presentación.

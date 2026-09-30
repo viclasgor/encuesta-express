@@ -214,9 +214,6 @@ with tab_resumen:
     if len(df) < 30:
         st.info("Muestra pequeña (n<30): el chi-cuadrado casi nunca será aplicable; "
                 "los cruces se leen como descriptivos.")
-    ignoradas = len(df.columns) - len(analizables)
-    if ignoradas:
-        st.info(f"{ignoradas} columna(s) ignoradas (id, email, fecha o descarte manual).")
     with st.expander("Perfil de la muestra"):
         st.dataframe(pd.DataFrame(
             {"pregunta": list(perfil["n_valido_por_columna"].keys()),
