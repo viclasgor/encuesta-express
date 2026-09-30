@@ -1,5 +1,5 @@
 import pandas as pd
-from src.analysis import cargar_csv, detectar_tipos, tabla_frecuencias
+from src.analysis import cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias
 
 CSV = "data/ejemplo_encuesta.csv"
 
@@ -21,6 +21,13 @@ def test_deteccion_tipos_columnas():
     # Rangos como categorias, no numeros
     assert tipos["¿Cuánto gastas al mes en café fuera de casa?"] == "categorica"
     assert tipos["¿Qué mejorarías?"] == "texto"
+
+
+def test_sugerir_ignorar_solo_temporal_y_email():
+    assert sugerir_ignorar("temporal") is True
+    assert sugerir_ignorar("email") is True
+    for t in ("categorica", "multiple", "escala", "texto"):
+        assert sugerir_ignorar(t) is False
 
 
 def test_frecuencias_rango_edad_suman_100():

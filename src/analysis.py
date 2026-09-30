@@ -73,6 +73,11 @@ def detectar_tipos(df: pd.DataFrame) -> dict[str, str]:
     return {col: detectar_tipo(col, df[col]) for col in df.columns}
 
 
+def sugerir_ignorar(tipo: str) -> bool:
+    # Timestamp y emails no aportan al informe; se sugiere ignorarlos (S3).
+    return tipo in ("temporal", "email")
+
+
 def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:
     """Tabla n y % sobre n valido. Vacios excluidos del % (pero contados fuera)."""
     no_vacios = serie[serie.astype(str).str.strip() != ""]
