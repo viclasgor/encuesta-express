@@ -38,3 +38,11 @@
 - **IA falló en / corregí:** 1) patrón de `edit` que comía líneas vecinas (3 casos: test mezclado, `tabla_multiple` sin `def`, `col_esc` borrado) → detectado con `grep`/`pytest`, reparado y verificado. 2) `barras_cruce` con índice sin nombre en múltiple (KeyError 'index') → `rename_axis` explícito. 3) fpdf2: cursor tras `multi_cell` (sin espacio) → `new_x/new_y`; cabecera de tabla pedía negrita inexistente → `FontFace(emphasis=None)`. 4) test DT con tolerancia 1e-9 vs redondeo a 3 decimales → tolerancia 1e-3. 5) `cruzables` excluía a `multiple` (US-12 inalcanzable) → incluido.
 - **Cómo lo detecté:** `python -m pytest -q` tras cada historia; `py_compile`/imports; arranque con health `/_stcore/health` → 200 antes de cada commit; puerto ocupado por servidor viejo → lo maté y verifiqué de nuevo.
 - **Decisión técnica mía:** Yates por defecto en 2×2 (S16); V de Cramér con `min(r-1,c-1)`; HTML con Plotly inline (S13); PDF sin gráficos (S15); filtro = un valor global (S6).
+
+---
+### 2026-09-30 — Rediseño visual UI (tema, sidebar, 4 pestañas, estado vacío)
+- **Pedí (resumen):** mejorar diseño/usabilidad sin tocar `src/` ni añadir deps; propuesta previa en 10 líneas; 10 puntos (tema, estructura, resumen, informe, gráficos, vacío, tablas, avanzado, CSS, accesibilidad); 1 commit.
+- **IA hizo bien:** `config.toml` (light, acento #0B7285); plantilla Plotly común en `src/plots.py` (solo estilo); sidebar (carga, filtro, % base, tipos); tabs Resumen/Informe/Cruces/Exportar; tarjetas `metric`; containers con borde; ZIP con `zipfile` estándar; totales resaltados; 23 tests verdes.
+- **IA falló en / corregí:** nada en esta tarea; desviación consciente: `% fila/columna` en sidebar (visible siempre con ayuda) en vez de solo en Cruces, por pedirlo el punto 2.
+- **Cómo lo detecté:** `pytest -q` (incluye render AppTest con ejemplo y en vacío); health 200; modo claro fijado en tema (oscuro no verificado).
+- **Decisión técnica mía:** sin CSS custom (no imprescindible); ZIP en vez de más botones; `width="stretch"` en lugar del deprecado `use_container_width`.
