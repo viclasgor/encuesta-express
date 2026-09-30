@@ -11,6 +11,7 @@ from src.analysis import (
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
 from src.export_html import generar_informe_html, tabla_a_csv
 from src.export_pdf import generar_pdf
+from src.chi2 import chi_cuadrado_cat
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -268,6 +269,20 @@ with tab_cruces:
                     barras_cruce(r["n"].drop(index="Total").drop(columns="Total"),
                                  "agrupadas"),
                     use_container_width=True)
+            # US-17: chi-cuadrado solo aquí (nunca en múltiples/escala/texto).
+            with st.expander("Test chi-cuadrado (¿hay asociación?)"):
+                sin_tot = r["n"].drop(index="Total").drop(columns="Total")
+                t = chi_cuadrado_cat(sin_tot)
+                if not t["aplicable"]:
+                    st.warning(f"Sin veredicto: {t['motivo']}")
+                    if "chi2" in t:
+                        st.write(f"chi²={t['chi2']} · gl={t['gl']} · p={t['p']} (orientativo)")
+                else:
+                    st.write(f"n={t['n']} · chi²={t['chi2']} · gl={t['gl']} · "
+                             f"p={t['p']} · V de Cramér={t['v_cramer']} · α={t['alfa']}")
+                    st.success(t["veredicto"])
+                    with st.expander("Frecuencias esperadas"):
+                        st.dataframe(t["esperadas"])
         elif ((tipos_final[f_col], tipos_final[c_col]).count("escala") == 1
                 and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
             col_esc = f_col if tipos_final[f_col] == "escala" else c_col

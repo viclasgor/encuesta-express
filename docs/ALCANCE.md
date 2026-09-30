@@ -61,3 +61,4 @@
 - S13: El HTML embebe Plotly inline (pesa más, pero abre sin internet).
 - S14: Las descargas CSV usan coma como separador, igual que el CSV de entrada.
 - S15: El PDF es mínimo (portada + tablas, sin gráficos) con fuente DejaVu vendored.
+- S16: En tablas 2×2 se deja la corrección de Yates que scipy aplica por defecto.
