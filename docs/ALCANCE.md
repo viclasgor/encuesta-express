@@ -60,3 +60,4 @@
 - S12: El .xlsx lee solo la primera hoja y normaliza todo a texto como el CSV.
 - S13: El HTML embebe Plotly inline (pesa más, pero abre sin internet).
 - S14: Las descargas CSV usan coma como separador, igual que el CSV de entrada.
+- S15: El PDF es mínimo (portada + tablas, sin gráficos) con fuente DejaVu vendored.

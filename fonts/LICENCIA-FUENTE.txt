@@ -1,0 +1,6 @@
+# Fuente del PDF: DejaVu Sans (DejaVuSans.ttf)
+- Para qué: que el PDF exportado muestre tildes (á é í ó ú ñ ¿ ¡) y el símbolo €.
+- Origen: extraída del paquete matplotlib (solo el .ttf; matplotlib NO es dependencia del proyecto).
+- Licencia: DejaVu Fonts License, permisiva estilo BSD (permite copiar y redistribuir
+  con aviso de copyright). Basada en Bitstream Vera Sans (© Bitstream, Inc.).
+  Texto completo: https://dejavu-fonts.github.io/License.html

@@ -10,6 +10,7 @@ from src.analysis import (
 )
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
 from src.export_html import generar_informe_html, tabla_a_csv
+from src.export_pdf import generar_pdf
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -208,6 +209,31 @@ with tab_informe:
         [bloque_pregunta(c, tipos_final[c]) for c in analizables], bloque_cruce())
     st.download_button("Descargar informe HTML", html_doc,
                        "informe_encuestaexpress.html", "text/html")
+
+    # US-16 (spike): PDF mínimo, solo portada + tablas, sin gráficos.
+    def bloque_pdf(col: str, tipo: str) -> dict:
+        if tipo == "texto":
+            resp = listar_texto(df[col])
+            return {"pregunta": col, "resumen": f"{len(resp)} respuestas",
+                    "tabla": pd.DataFrame({"respuesta": resp})}
+        if tipo == "escala":
+            r = resumen_escala(df[col])
+            return {"pregunta": col,
+                    "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
+                                f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
+                    "tabla": distribucion_escala(df[col])}
+        if tipo == "multiple":
+            return {"pregunta": col, "resumen": "% sobre respondientes",
+                    "tabla": tabla_multiple(df[col])}
+        t = tabla_frecuencias(df[col])
+        return {"pregunta": col,
+                "resumen": f"n válido {t.attrs['n_valido']}/{t.attrs['n_total']}",
+                "tabla": t}
+
+    pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df),
+                          [bloque_pdf(c, tipos_final[c]) for c in analizables])
+    st.download_button("Descargar PDF (beta, sin gráficos)", pdf_doc,
+                       "informe_encuestaexpress.pdf", "application/pdf")
 
 with tab_cruces:
     cruzables = [c for c in analizables
