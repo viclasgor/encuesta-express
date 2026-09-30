@@ -1,6 +1,6 @@
 import pandas as pd
 from src.analysis import (
-    cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
+    cargar_csv, cargar_excel, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
     cruce_multiple_cat, aplicar_filtro,
@@ -128,3 +128,13 @@ def test_filtro_global_por_valor():
     assert len(aplicar_filtro(df, "Rango de edad", "Todos")) == 8
     assert len(aplicar_filtro(df, None, None)) == 8
     assert len(aplicar_filtro(df, "Rango de edad", "18-24")) == 2
+
+
+def test_xlsx_misma_deteccion_y_frecuencias_que_csv():
+    df_csv = cargar_csv(CSV)
+    df_xls = cargar_excel("tests/fixtures/ejemplo_encuesta.xlsx")
+    assert len(df_xls) == 8 and len(df_xls.columns) == 7
+    assert detectar_tipos(df_xls) == detectar_tipos(df_csv)
+    t_csv = tabla_frecuencias(df_csv["Rango de edad"])
+    t_xls = tabla_frecuencias(df_xls["Rango de edad"])
+    assert t_xls[["categoria", "n", "pct"]].equals(t_csv[["categoria", "n", "pct"]])

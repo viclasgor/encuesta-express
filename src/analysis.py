@@ -209,3 +209,21 @@ def aplicar_filtro(df: pd.DataFrame, columna: str | None, valor: str | None) -> 
         return df.copy()
     sel = df[columna].astype(str).str.strip() == str(valor).strip()
     return df[sel].reset_index(drop=True)
+
+
+def cargar_excel(path_o_buffer, hoja: int | str = 0) -> pd.DataFrame:
+    """Lee .xlsx (primera hoja por defecto, S12) y normaliza todo a texto
+    como en el CSV, para que la detección funcione igual aunque Excel tipe."""
+    df = pd.read_excel(path_o_buffer, sheet_name=hoja, header=0, engine="openpyxl")
+
+    def a_texto(v) -> str:
+        if pd.isna(v):
+            return ""
+        if isinstance(v, bool):
+            return str(v)
+        if isinstance(v, float) and v.is_integer():
+            return str(int(v))
+        return str(v).strip()
+
+    df.columns = [str(c).strip() for c in df.columns]
+    return df.apply(lambda col: col.map(a_texto)).astype(str)

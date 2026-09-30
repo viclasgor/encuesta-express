@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 from src.analysis import (
-    cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
+    cargar_csv, cargar_excel, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
     cruce_multiple_cat, aplicar_filtro,
@@ -24,18 +24,25 @@ with st.expander("Ayuda: ¿qué CSV necesito?"):
         "- Si hay columna de email, se sugiere ignorarla por privacidad."
     )
 
-archivo = st.file_uploader("CSV de Google Forms", type=["csv"])
+archivo = st.file_uploader("CSV o Excel de Google Forms", type=["csv", "xlsx"])
 usar_ejemplo = st.checkbox("Usar CSV de ejemplo", value=archivo is None)
 
 try:
     if archivo is not None:
-        df = cargar_csv(archivo)
+        if archivo.name.lower().endswith(".xlsx"):
+            df = cargar_excel(archivo)
+        elif archivo.name.lower().endswith(".csv"):
+            df = cargar_csv(archivo)
+        else:
+            st.error("Formato no soportado: usa .csv o .xlsx (el .xls antiguo no vale).")
+            st.stop()
     elif usar_ejemplo:
         df = cargar_csv("data/ejemplo_encuesta.csv")
     else:
         st.stop()
 except Exception as e:
-    st.error(f"No pude leer el CSV. Revisa que sea UTF-8 con comas. Detalle: {e}")
+    st.error(f"No pude leer el archivo. Revisa que sea .csv (UTF-8, comas) o .xlsx "
+             f"con la primera fila de preguntas. Detalle: {e}")
     st.stop()
 
 # US-03: revision manual de tipos detectados + ignorar columnas.

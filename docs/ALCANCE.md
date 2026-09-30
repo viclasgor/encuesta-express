@@ -57,3 +57,4 @@
 - S9: La corrección manual de tipos vive en `session_state` y se reinicia al cambiar de archivo.
 - S10: El listado de texto abierto se pagina de 10 en 10.
 - S11: Pestañas Informe / Cruces / Datos; la de Cruces se rellena en el Incremento 3.
+- S12: El .xlsx lee solo la primera hoja y normaliza todo a texto como el CSV.
