@@ -146,3 +146,20 @@ def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
     tabla.attrs["n_respondientes"] = n_resp
     tabla.attrs["n_total"] = n_total
     return tabla
+
+
+def cruce_cat_cat(s_filas: pd.Series, s_columnas: pd.Series, base: str = "fila") -> dict:
+    """Tabla cruzada n + % con totales. Vacios excluidos (se informa cuantos)."""
+    f = s_filas.astype(str).str.strip()
+    c = s_columnas.astype(str).str.strip()
+    mask = (f != "") & (c != "")
+    excluidos = int((~mask).sum())
+    ct = pd.crosstab(f[mask], c[mask])
+    n = ct.copy()
+    n["Total"] = n.sum(axis=1)
+    n.loc["Total"] = n.sum(axis=0)
+    if base == "columna":
+        pct = (ct.div(ct.sum(axis=0), axis=1) * 100).round(1)
+    else:
+        pct = (ct.div(ct.sum(axis=1), axis=0) * 100).round(1)
+    return {"n": n, "pct": pct, "excluidos": excluidos, "base": base}

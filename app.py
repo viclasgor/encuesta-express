@@ -4,9 +4,9 @@ import pandas as pd
 from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
-    tabla_frecuencias, tabla_multiple,
+    tabla_frecuencias, tabla_multiple, cruce_cat_cat,
 )
-from src.plots import barras_horizontales, barras_verticales
+from src.plots import barras_horizontales, barras_verticales, barras_cruce
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -112,7 +112,35 @@ with tab_informe:
         mostrar_pregunta(col, tipos_final[col])
 
 with tab_cruces:
-    st.info("Los cruces entre dos preguntas llegan en el Incremento 3.")
+    cruzables = [c for c in analizables if tipos_final[c] in ("categorica", "escala")]
+    if len(cruzables) < 2:
+        st.info("Necesitas al menos 2 preguntas categóricas o de escala.")
+    else:
+        f_col = st.selectbox("Filas", cruzables, key="cruce_filas")
+        c_col = st.selectbox("Columnas", [c for c in cruzables if c != f_col],
+                             key="cruce_cols")
+        if tipos_final[f_col] == "categorica" and tipos_final[c_col] == "categorica":
+            base = st.radio("% sobre", ["fila", "columna"], horizontal=True)
+            r = cruce_cat_cat(df[f_col], df[c_col], base=base)
+            if r["excluidos"]:
+                st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
+            st.dataframe(r["n"])
+            st.dataframe(r["pct"])
+            totales_fila = r["n"].drop(index="Total", errors="ignore")["Total"]
+            totales_col = r["n"].drop(columns="Total", errors="ignore").loc["Total"]
+            if (totales_fila < 5).any() or (totales_col < 5).any():
+                st.warning("Algún grupo tiene menos de 5 respuestas: interpreta con cautela.")
+            modo = st.radio("Gráfico", ["apiladas", "agrupadas"], horizontal=True)
+            if modo == "apiladas":
+                st.plotly_chart(barras_cruce(r["pct"], "apiladas"),
+                                use_container_width=True)
+            else:
+                st.plotly_chart(
+                    barras_cruce(r["n"].drop(index="Total").drop(columns="Total"),
+                                 "agrupadas"),
+                    use_container_width=True)
+        else:
+            st.info("El cruce escala×categórica llega en US-08.")
 
 with tab_datos:
     with st.expander("Perfil de la muestra"):

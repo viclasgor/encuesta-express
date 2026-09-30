@@ -2,7 +2,7 @@ import pandas as pd
 from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
-    tabla_frecuencias, tabla_multiple,
+    tabla_frecuencias, tabla_multiple, cruce_cat_cat,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -78,3 +78,21 @@ def test_texto_lista_sin_vacios_y_perfil():
     assert p["n_total"] == 8
     assert p["n_valido_por_columna"]["¿Qué mejorarías?"] == 5
     assert p["n_valido_por_columna"]["Rango de edad"] == 8
+
+
+def test_cruce_cat_cat_con_totales_y_pct():
+    df = cargar_csv(CSV)
+    r = cruce_cat_cat(df["Rango de edad"], df["¿Con qué frecuencia compras café fuera de casa?"])
+    assert r["excluidos"] == 0
+    assert r["n"].loc["Total", "Total"] == 8
+    assert r["pct"].sum(axis=1).round(0).tolist() == [100.0] * 4
+    rb = cruce_cat_cat(df["Rango de edad"], df["¿Con qué frecuencia compras café fuera de casa?"],
+                       base="columna")
+    assert rb["pct"].sum(axis=0).round(0).tolist() == [100.0] * 4
+
+
+def test_cruce_excluye_vacios_e_informa():
+    df = cargar_csv(CSV)
+    r = cruce_cat_cat(df["Rango de edad"], df["¿Qué mejorarías?"])
+    assert r["excluidos"] == 3
+    assert r["n"].loc["Total", "Total"] == 5
