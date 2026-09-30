@@ -18,7 +18,8 @@ def barras_verticales(tabla: pd.DataFrame, x_col: str = "valor") -> object:
     return fig
 
 
-def barras_cruce(tabla_wide: pd.DataFrame, modo: str = "apiladas") -> object:
+def barras_cruce(tabla_wide: pd.DataFrame, modo: str = "apiladas",
+               ylabel: str | None = None) -> object:
     # Tabla ancha filas x columnas (n o %); modo apiladas (100%) o agrupadas.
     largo = tabla_wide.reset_index().melt(
         id_vars=tabla_wide.index.name or "index", var_name="columna", value_name="y"
@@ -26,7 +27,8 @@ def barras_cruce(tabla_wide: pd.DataFrame, modo: str = "apiladas") -> object:
     x_col = largo.columns[0]
     fig = px.bar(largo, x=x_col, y="y", color="columna",
                  barmode="stack" if modo == "apiladas" else "group", text="y")
-    fig.update_layout(xaxis_title="", yaxis_title="%" if modo == "apiladas" else "n",
+    fig.update_layout(xaxis_title="",
+                      yaxis_title=ylabel or ("%" if modo == "apiladas" else "n"),
                       height=360)
     return fig
 

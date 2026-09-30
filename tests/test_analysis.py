@@ -3,6 +3,7 @@ from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
+    cruce_multiple_cat,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -107,3 +108,14 @@ def test_cruce_escala_cat_medias_por_grupo():
     assert d == {"18-24": 3.0, "25-34": 3.667, "35-44": 4.0, "45-54": 4.0}
     assert dict(zip(r["tabla"]["grupo"], r["tabla"]["n"])) == {
         "18-24": 2, "25-34": 3, "35-44": 2, "45-54": 1}
+
+
+def test_cruce_multiple_cat_pct_sobre_grupo():
+    df = cargar_csv(CSV)
+    r = cruce_multiple_cat(df["¿Qué factores influyen en tu elección?"], df["Rango de edad"])
+    assert r["excluidos"] == 0
+    t = r["tabla"]
+    prow = t[(t["grupo"] == "18-24") & (t["opcion"] == "Precio")].iloc[0]
+    assert (prow["menciones"], prow["n_grupo"], prow["pct"]) == (2, 2, 100.0)
+    urow = t[(t["grupo"] == "45-54") & (t["opcion"] == "Ubicación")].iloc[0]
+    assert (urow["menciones"], urow["n_grupo"], urow["pct"]) == (1, 1, 100.0)

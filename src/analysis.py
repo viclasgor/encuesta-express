@@ -177,3 +177,27 @@ def cruce_escala_cat(s_escala: pd.Series, s_grupo: pd.Series) -> dict:
     tabla.columns = ["grupo", "media", "dt", "n"]
     tabla["dt"] = tabla["dt"].fillna(0.0)  # n=1: sin dispersión que mostrar
     return {"tabla": tabla, "excluidos": excluidos}
+
+
+def cruce_multiple_cat(s_multiple: pd.Series, s_grupo: pd.Series, sep: str = ", ") -> dict:
+    """Múltiple x categórica: por opción y grupo, menciones y % sobre
+    respondientes del grupo. Solo descriptivo, sin test (S5)."""
+    m = s_multiple.astype(str).str.strip()
+    g = s_grupo.astype(str).str.strip()
+    mask = (m != "") & (g != "")
+    excluidos = int((~mask).sum())
+    cols = ["grupo", "opcion", "menciones", "n_grupo", "pct"]
+    if int(mask.sum()) == 0:
+        return {"tabla": pd.DataFrame(columns=cols), "excluidos": excluidos}
+    mm, gg = m[mask], g[mask]
+    n_grupo = gg.value_counts()
+    pares = [(gg.loc[i], op) for i, v in mm.items()
+             for op in [p.strip() for p in v.split(sep) if p.strip() != ""]]
+    ct = pd.crosstab(pd.Series([p[0] for p in pares]), pd.Series([p[1] for p in pares]))
+    pct = (ct.div(n_grupo, axis=0) * 100).round(1)
+    pct = pct.rename_axis(index="grupo", columns="opcion").reset_index()
+    largo = pct.melt(id_vars="grupo", var_name="opcion", value_name="pct")
+    largo["menciones"] = [int(ct.loc[r["grupo"], r["opcion"]]) for _, r in largo.iterrows()]
+    largo["n_grupo"] = largo["grupo"].map(n_grupo).astype(int).tolist()
+    return {"tabla": largo.sort_values(["grupo", "opcion"]).reset_index(drop=True),
+            "excluidos": excluidos}

@@ -5,6 +5,7 @@ from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
+    cruce_multiple_cat,
 )
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
 
@@ -150,8 +151,20 @@ with tab_cruces:
             if (r["tabla"]["n"] < 5).any():
                 st.warning("Algún grupo tiene menos de 5 respuestas: interpreta con cautela.")
             st.plotly_chart(barras_medias(r["tabla"]), use_container_width=True)
+        elif ((tipos_final[f_col], tipos_final[c_col]).count("multiple") == 1
+                and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
+            col_mul = f_col if tipos_final[f_col] == "multiple" else c_col
+            col_cat = c_col if tipos_final[f_col] == "multiple" else f_col
+            r = cruce_multiple_cat(df[col_mul], df[col_cat])
+            st.caption("% sobre respondientes de cada grupo. Solo descriptivo, sin test (S5).")
+            if r["excluidos"]:
+                st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
+            st.dataframe(r["tabla"])
+            ancho = r["tabla"].pivot(index="grupo", columns="opcion", values="pct")
+            st.plotly_chart(barras_cruce(ancho, "agrupadas", ylabel="% resp."),
+                            use_container_width=True)
         else:
-            st.info("Elige dos categóricas, o una escala y una categórica.")
+            st.info("Elige dos categóricas, una escala con una categórica, o una múltiple con una categórica.")
 
 with tab_datos:
     with st.expander("Perfil de la muestra"):
