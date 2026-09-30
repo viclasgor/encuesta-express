@@ -59,3 +59,4 @@
 - S11: Pestañas Informe / Cruces / Datos; la de Cruces se rellena en el Incremento 3.
 - S12: El .xlsx lee solo la primera hoja y normaliza todo a texto como el CSV.
 - S13: El HTML embebe Plotly inline (pesa más, pero abre sin internet).
+- S14: Las descargas CSV usan coma como separador, igual que el CSV de entrada.

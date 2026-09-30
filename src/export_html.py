@@ -12,6 +12,14 @@ def _fig_div(fig) -> str:
     return to_html(fig, full_html=False, include_plotlyjs=False)
 
 
+def tabla_a_csv(tabla) -> str:
+    """Una tabla del informe a texto CSV (coma, sin índice)."""
+    import pandas as pd
+    if not isinstance(tabla, pd.DataFrame):
+        tabla = pd.DataFrame(tabla)
+    return tabla.to_csv(index=False)
+
+
 def generar_informe_html(titulo: str, fecha: str, n_total: int,
                          bloques: list[dict], cruce: dict | None = None) -> str:
     """bloques: [{pregunta, tipo, resumen, tabla_html, fig}]; cruce opcional

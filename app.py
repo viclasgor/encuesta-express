@@ -9,7 +9,7 @@ from src.analysis import (
     cruce_multiple_cat, aplicar_filtro,
 )
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
-from src.export_html import generar_informe_html
+from src.export_html import generar_informe_html, tabla_a_csv
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -96,7 +96,13 @@ if not analizables:
 
 def mostrar_pregunta(col: str, tipo: str) -> None:
     """Una pregunta con su tabla/grafico segun tipo (US-02/04/05/06)."""
+    import re
     st.subheader(col)
+    slug = re.sub(r"[^a-z0-9]+", "_", col.lower()).strip("_")[:40] or "pregunta"
+
+    def boton_csv(tabla, sufijo: str) -> None:
+        st.download_button("Descargar CSV", tabla_a_csv(tabla), f"{slug}_{sufijo}.csv",
+                           "text/csv", key=f"csv_{slug}_{sufijo}")
     if tipo == "texto":
         respuestas = listar_texto(df[col])
         st.write(f"{len(respuestas)} respuestas (de {len(df)} totales, resto vacías). Sin gráfico.")
@@ -107,6 +113,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
                                     value=1, key=f"pag_{col}")
         for r in respuestas[(n_pag - 1) * por_pag:n_pag * por_pag]:
             st.markdown(f"- {r}")
+        boton_csv(pd.DataFrame({"respuesta": respuestas}), "texto")
     elif tipo == "escala":
         r = resumen_escala(df[col])
         c1, c2, c3, c4 = st.columns(4)
@@ -116,6 +123,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         c4.metric("n válido / total", f"{r['n_valido']} / {r['n_total']}")
         dist = distribucion_escala(df[col])
         st.dataframe(dist)
+        boton_csv(dist, "escala")
         st.plotly_chart(barras_verticales(dist), use_container_width=True)
     elif tipo == "multiple":
         tabla = tabla_multiple(df[col])
@@ -124,6 +132,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
             f"n total: {tabla.attrs['n_total']} · % sobre respondientes"
         )
         st.dataframe(tabla)
+        boton_csv(tabla, "multiple")
         st.plotly_chart(
             barras_horizontales(tabla.rename(columns={"opcion": "categoria", "menciones": "n"})),
             use_container_width=True,
@@ -132,6 +141,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         tabla = tabla_frecuencias(df[col])
         st.write(f"n válido: {tabla.attrs['n_valido']} · n total: {tabla.attrs['n_total']}")
         st.dataframe(tabla)
+        boton_csv(tabla, "frecuencias")
         st.plotly_chart(barras_horizontales(tabla), use_container_width=True)
 
 
@@ -200,9 +210,10 @@ with tab_informe:
                        "informe_encuestaexpress.html", "text/html")
 
 with tab_cruces:
-    cruzables = [c for c in analizables if tipos_final[c] in ("categorica", "escala")]
+    cruzables = [c for c in analizables
+                 if tipos_final[c] in ("categorica", "escala", "multiple")]
     if len(cruzables) < 2:
-        st.info("Necesitas al menos 2 preguntas categóricas o de escala.")
+        st.info("Necesitas al menos 2 preguntas cruzables (categóricas, escala o múltiples).")
     else:
         f_col = st.selectbox("Filas", cruzables, key="cruce_filas")
         c_col = st.selectbox("Columnas", [c for c in cruzables if c != f_col],
@@ -213,7 +224,11 @@ with tab_cruces:
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
             st.dataframe(r["n"])
+            st.download_button("Descargar CSV (n)", tabla_a_csv(r["n"].reset_index()),
+                               "cruce_n.csv", "text/csv", key="csv_cruce_n")
             st.dataframe(r["pct"])
+            st.download_button("Descargar CSV (%)", tabla_a_csv(r["pct"].reset_index()),
+                               "cruce_pct.csv", "text/csv", key="csv_cruce_pct")
             totales_fila = r["n"].drop(index="Total", errors="ignore")["Total"]
             totales_col = r["n"].drop(columns="Total", errors="ignore").loc["Total"]
             if (totales_fila < 5).any() or (totales_col < 5).any():
@@ -235,6 +250,8 @@ with tab_cruces:
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
             st.dataframe(r["tabla"])
+            st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
+                               "cruce_medias.csv", "text/csv", key="csv_cruce_medias")
             if (r["tabla"]["n"] < 5).any():
                 st.warning("Algún grupo tiene menos de 5 respuestas: interpreta con cautela.")
             st.plotly_chart(barras_medias(r["tabla"]), use_container_width=True)
@@ -247,6 +264,8 @@ with tab_cruces:
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
             st.dataframe(r["tabla"])
+            st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
+                               "cruce_multiple.csv", "text/csv", key="csv_cruce_mul")
             ancho = r["tabla"].pivot(index="grupo", columns="opcion", values="pct")
             st.plotly_chart(barras_cruce(ancho, "agrupadas", ylabel="% resp."),
                             use_container_width=True)
