@@ -1,4 +1,5 @@
 """EncuestaExpress - informe automatico de encuestas Google Forms (calculos en src/)."""
+from datetime import date
 import streamlit as st
 import pandas as pd
 from src.analysis import (
@@ -8,6 +9,7 @@ from src.analysis import (
     cruce_multiple_cat, aplicar_filtro,
 )
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
+from src.export_html import generar_informe_html
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -138,6 +140,64 @@ tab_informe, tab_cruces, tab_datos = st.tabs(["Informe", "Cruces", "Datos"])
 with tab_informe:
     for col in analizables:
         mostrar_pregunta(col, tipos_final[col])
+
+    # US-09: exportar el informe visible (con filtro y tipos corregidos).
+    def bloque_pregunta(col: str, tipo: str) -> dict:
+        if tipo == "texto":
+            resp = listar_texto(df[col])
+            return {"pregunta": col, "tipo": tipo,
+                    "resumen": f"{len(resp)} respuestas de {len(df)}",
+                    "tabla_html": pd.DataFrame({"respuesta": resp}).to_html(index=False),
+                    "fig": None}
+        if tipo == "escala":
+            r = resumen_escala(df[col])
+            dist = distribucion_escala(df[col])
+            return {"pregunta": col, "tipo": tipo,
+                    "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
+                                f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
+                    "tabla_html": dist.to_html(index=False),
+                    "fig": barras_verticales(dist)}
+        if tipo == "multiple":
+            t = tabla_multiple(df[col])
+            return {"pregunta": col, "tipo": tipo,
+                    "resumen": (f"{t.attrs['n_respondientes']} respondientes, "
+                                "% sobre respondientes"),
+                    "tabla_html": t.to_html(index=False),
+                    "fig": barras_horizontales(
+                        t.rename(columns={"opcion": "categoria", "menciones": "n"}))}
+        t = tabla_frecuencias(df[col])
+        return {"pregunta": col, "tipo": tipo,
+                "resumen": f"n válido {t.attrs['n_valido']}/{t.attrs['n_total']}",
+                "tabla_html": t.to_html(index=False),
+                "fig": barras_horizontales(t)}
+
+    def bloque_cruce() -> dict | None:
+        f_col = st.session_state.get("cruce_filas")
+        c_col = st.session_state.get("cruce_cols")
+        if not f_col or not c_col or f_col == c_col:
+            return None
+        if f_col not in df.columns or c_col not in df.columns:
+            return None
+        tf, tc = tipos_final.get(f_col), tipos_final.get(c_col)
+        if tf == "categorica" and tc == "categorica":
+            r = cruce_cat_cat(df[f_col], df[c_col])
+            return {"titulo": f"Cruce: {f_col} × {c_col}",
+                    "tablas_html": [r["n"].to_html(), r["pct"].to_html()],
+                    "fig": barras_cruce(r["pct"], "apiladas")}
+        if {tf, tc} == {"escala", "categorica"}:
+            col_esc = f_col if tf == "escala" else c_col
+            col_cat = c_col if tf == "escala" else f_col
+            r = cruce_escala_cat(df[col_esc], df[col_cat])
+            return {"titulo": f"Cruce: {col_esc} × {col_cat}",
+                    "tablas_html": [r["tabla"].to_html(index=False)],
+                    "fig": barras_medias(r["tabla"])}
+        return None
+
+    html_doc = generar_informe_html(
+        "Informe EncuestaExpress", str(date.today()), len(df),
+        [bloque_pregunta(c, tipos_final[c]) for c in analizables], bloque_cruce())
+    st.download_button("Descargar informe HTML", html_doc,
+                       "informe_encuestaexpress.html", "text/html")
 
 with tab_cruces:
     cruzables = [c for c in analizables if tipos_final[c] in ("categorica", "escala")]
