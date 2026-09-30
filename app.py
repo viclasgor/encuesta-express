@@ -13,7 +13,7 @@ from src.export_html import generar_informe_html, tabla_a_csv
 from src.export_pdf import generar_pdf
 from src.chi2 import chi_cuadrado_cat
 
-TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
+TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "id", "ignorar"]
 
 st.set_page_config(page_title="EncuestaExpress", layout="wide")
 st.title("EncuestaExpress")
@@ -83,7 +83,8 @@ with st.expander("Revisar tipos detectados (puedes corregir o ignorar columnas)"
             key=f"tipo_{col}",
         )
 
-analizables = [c for c in df.columns if tipos_final[c] not in ("ignorar", "temporal", "email")]
+analizables = [c for c in df.columns
+               if tipos_final[c] not in ("ignorar", "temporal", "email", "id")]
 perfil = perfil_muestra(df)
 
 # Tarjetas de métricas.

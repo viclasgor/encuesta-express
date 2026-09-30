@@ -1,5 +1,7 @@
 """Logica pura de analisis (sin Streamlit). Testeable con pytest."""
 from __future__ import annotations
+import re
+import unicodedata
 import pandas as pd
 
 
@@ -12,6 +14,22 @@ def cargar_csv(path_o_buffer) -> pd.DataFrame:
 def _es_columna_email(nombre: str) -> bool:
     n = nombre.lower()
     return ("mail" in n) or ("correo" in n) or ("e-mail" in n)
+
+
+def _es_columna_id(nombre: str, serie: pd.Series) -> bool:
+    # Identificador (id_respuesta, participante nº X...): nombre que lo sugiere
+    # Y valores unicos por fila. Las dos condiciones a la vez (S17).
+    sin_acentos = "".join(
+        c for c in unicodedata.normalize("NFD", nombre.lower())
+        if unicodedata.category(c) != "Mn")
+    es_nombre_id = (
+        re.search(r"(^|[\W_])(id|codigo|participante|folio|clave|registro|numero|num)(s|es)?([\W_]|$)",
+                  sin_acentos) is not None
+        or any(s in nombre.lower() for s in ("nº", "n°", "#")))
+    if not es_nombre_id:
+        return False
+    vals = [v.strip() for v in serie.tolist() if v.strip() != ""]
+    return len(vals) > 0 and len(set(vals)) / len(vals) > 0.95
 
 
 def _es_columna_temporal(nombre: str, serie: pd.Series) -> bool:
@@ -42,12 +60,14 @@ def _es_escala(no_vacios: list[str]) -> bool:
 
 
 def detectar_tipo(nombre: str, serie: pd.Series) -> str:
-    """Devuelve: temporal | email | escala | multiple | texto | categorica."""
+    """Devuelve: temporal | email | escala | multiple | texto | categorica | id."""
     vals = [v for v in serie.tolist()]
     no_vacios = [v.strip() for v in vals if v.strip() != ""]
 
     if _es_columna_email(nombre):
         return "email"
+    if _es_columna_id(nombre, serie):
+        return "id"
     if not no_vacios:
         return "categorica"
     if _es_escala(no_vacios):
@@ -74,8 +94,8 @@ def detectar_tipos(df: pd.DataFrame) -> dict[str, str]:
 
 
 def sugerir_ignorar(tipo: str) -> bool:
-    # Timestamp y emails no aportan al informe; se sugiere ignorarlos (S3).
-    return tipo in ("temporal", "email")
+    # Timestamp, emails e identificadores no aportan al informe (S3, S17).
+    return tipo in ("temporal", "email", "id")
 
 
 def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:

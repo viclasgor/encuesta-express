@@ -62,3 +62,4 @@
 - S14: Las descargas CSV usan coma como separador, igual que el CSV de entrada.
 - S15: El PDF es mínimo (portada + tablas, sin gráficos) con fuente DejaVu vendored.
 - S16: En tablas 2×2 se deja la corrección de Yates que scipy aplica por defecto.
+- S17: Columna `id` = nombre de identificador + valores únicos por fila (>95%).

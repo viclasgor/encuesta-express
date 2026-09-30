@@ -31,6 +31,7 @@ def test_deteccion_tipos_columnas():
 def test_sugerir_ignorar_solo_temporal_y_email():
     assert sugerir_ignorar("temporal") is True
     assert sugerir_ignorar("email") is True
+    assert sugerir_ignorar("id") is True
     for t in ("categorica", "multiple", "escala", "texto"):
         assert sugerir_ignorar(t) is False
 
@@ -128,6 +129,18 @@ def test_filtro_global_por_valor():
     assert len(aplicar_filtro(df, "Rango de edad", "Todos")) == 8
     assert len(aplicar_filtro(df, None, None)) == 8
     assert len(aplicar_filtro(df, "Rango de edad", "18-24")) == 2
+
+
+def test_id_respuesta_y_participante_se_detectan_como_id():
+    df = pd.DataFrame({
+        "id_respuesta": [str(i) for i in range(1, 9)],
+        "participante nº": [f"Participante {i}" for i in range(1, 9)],
+        "Rango de edad": ["18-24", "25-34"] * 4,
+    })
+    tipos = detectar_tipos(df)
+    assert tipos["id_respuesta"] == "id"
+    assert tipos["participante nº"] == "id"
+    assert tipos["Rango de edad"] == "categorica"  # repetida: no es id
 
 
 def test_xlsx_misma_deteccion_y_frecuencias_que_csv():
