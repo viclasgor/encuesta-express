@@ -126,7 +126,8 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         dist = distribucion_escala(df[col])
         st.dataframe(dist)
         boton_csv(dist, "escala")
-        st.plotly_chart(barras_verticales(dist), use_container_width=True)
+        st.plotly_chart(barras_verticales(dist), width="stretch",
+                        key=f"chart_{slug}_escala")
     elif tipo == "multiple":
         tabla = tabla_multiple(df[col])
         st.write(
@@ -137,14 +138,15 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         boton_csv(tabla, "multiple")
         st.plotly_chart(
             barras_horizontales(tabla.rename(columns={"opcion": "categoria", "menciones": "n"})),
-            use_container_width=True,
+            width="stretch", key=f"chart_{slug}_multiple",
         )
     else:  # categorica (y cualquier otro caso, lo mas simple)
         tabla = tabla_frecuencias(df[col])
         st.write(f"n válido: {tabla.attrs['n_valido']} · n total: {tabla.attrs['n_total']}")
         st.dataframe(tabla)
         boton_csv(tabla, "frecuencias")
-        st.plotly_chart(barras_horizontales(tabla), use_container_width=True)
+        st.plotly_chart(barras_horizontales(tabla), width="stretch",
+                        key=f"chart_{slug}_cat")
 
 
 tab_informe, tab_cruces, tab_datos = st.tabs(["Informe", "Cruces", "Datos"])
@@ -263,12 +265,12 @@ with tab_cruces:
             modo = st.radio("Gráfico", ["apiladas", "agrupadas"], horizontal=True)
             if modo == "apiladas":
                 st.plotly_chart(barras_cruce(r["pct"], "apiladas"),
-                                use_container_width=True)
+                                width="stretch", key="chart_cruce_apil")
             else:
                 st.plotly_chart(
                     barras_cruce(r["n"].drop(index="Total").drop(columns="Total"),
                                  "agrupadas"),
-                    use_container_width=True)
+                    width="stretch", key="chart_cruce_agrup")
             # US-17: chi-cuadrado solo aquí (nunca en múltiples/escala/texto).
             with st.expander("Test chi-cuadrado (¿hay asociación?)"):
                 sin_tot = r["n"].drop(index="Total").drop(columns="Total")
@@ -295,7 +297,8 @@ with tab_cruces:
                                "cruce_medias.csv", "text/csv", key="csv_cruce_medias")
             if (r["tabla"]["n"] < 5).any():
                 st.warning("Algún grupo tiene menos de 5 respuestas: interpreta con cautela.")
-            st.plotly_chart(barras_medias(r["tabla"]), use_container_width=True)
+            st.plotly_chart(barras_medias(r["tabla"]), width="stretch",
+                            key="chart_cruce_medias")
         elif ((tipos_final[f_col], tipos_final[c_col]).count("multiple") == 1
                 and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
             col_mul = f_col if tipos_final[f_col] == "multiple" else c_col
@@ -309,7 +312,7 @@ with tab_cruces:
                                "cruce_multiple.csv", "text/csv", key="csv_cruce_mul")
             ancho = r["tabla"].pivot(index="grupo", columns="opcion", values="pct")
             st.plotly_chart(barras_cruce(ancho, "agrupadas", ylabel="% resp."),
-                            use_container_width=True)
+                            width="stretch", key="chart_cruce_mul")
         else:
             st.info("Elige dos categóricas, una escala con una categórica, o una múltiple con una categórica.")
 
