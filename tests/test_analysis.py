@@ -3,7 +3,7 @@ from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
-    cruce_multiple_cat,
+    cruce_multiple_cat, aplicar_filtro,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -119,3 +119,12 @@ def test_cruce_multiple_cat_pct_sobre_grupo():
     assert (prow["menciones"], prow["n_grupo"], prow["pct"]) == (2, 2, 100.0)
     urow = t[(t["grupo"] == "45-54") & (t["opcion"] == "Ubicación")].iloc[0]
     assert (urow["menciones"], urow["n_grupo"], urow["pct"]) == (1, 1, 100.0)
+
+
+def test_filtro_global_por_valor():
+    df = cargar_csv(CSV)
+    f = aplicar_filtro(df, "Rango de edad", "25-34")
+    assert len(f) == 3
+    assert len(aplicar_filtro(df, "Rango de edad", "Todos")) == 8
+    assert len(aplicar_filtro(df, None, None)) == 8
+    assert len(aplicar_filtro(df, "Rango de edad", "18-24")) == 2

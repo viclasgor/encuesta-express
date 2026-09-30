@@ -201,3 +201,11 @@ def cruce_multiple_cat(s_multiple: pd.Series, s_grupo: pd.Series, sep: str = ", 
     largo["n_grupo"] = largo["grupo"].map(n_grupo).astype(int).tolist()
     return {"tabla": largo.sort_values(["grupo", "opcion"]).reset_index(drop=True),
             "excluidos": excluidos}
+
+
+def aplicar_filtro(df: pd.DataFrame, columna: str | None, valor: str | None) -> pd.DataFrame:
+    """Un valor de una columna filtra todas las filas (S6); 'Todos' no filtra."""
+    if not columna or columna == "(sin filtro)" or valor in (None, "", "Todos"):
+        return df.copy()
+    sel = df[columna].astype(str).str.strip() == str(valor).strip()
+    return df[sel].reset_index(drop=True)

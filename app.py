@@ -5,7 +5,7 @@ from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
-    cruce_multiple_cat,
+    cruce_multiple_cat, aplicar_filtro,
 )
 from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
 
@@ -40,6 +40,26 @@ except Exception as e:
 
 # US-03: revision manual de tipos detectados + ignorar columnas.
 tipos_auto = detectar_tipos(df)
+
+# US-13: filtro por segmento (un valor de una categórica filtra TODO, S6).
+st.subheader("Filtro por segmento")
+cat_filtro = [c for c in df.columns if tipos_auto[c] == "categorica"]
+f_col_f, f_val_f = None, "Todos"
+if cat_filtro:
+    f_col_f = st.selectbox("Columna de segmento", ["(sin filtro)"] + cat_filtro,
+                           key="filtro_col")
+    if f_col_f != "(sin filtro)":
+        f_val_f = st.selectbox("Valor", ["Todos"] + sorted(
+            {v.strip() for v in df[f_col_f].astype(str) if v.strip() != ""}),
+            key="filtro_val")
+n_antes = len(df)
+df = aplicar_filtro(df, f_col_f if f_col_f != "(sin filtro)" else None, f_val_f)
+if len(df) < n_antes:
+    st.info(f"Segmento {f_col_f} = {f_val_f}: {len(df)} de {n_antes} respuestas.")
+if len(df) == 0:
+    st.warning("El filtro no deja respuestas. Elige otro valor.")
+    st.stop()
+
 with st.expander("Revisar tipos detectados (puedes corregir o ignorar columnas)"):
     tipos_final = {}
     for col in df.columns:
