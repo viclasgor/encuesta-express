@@ -1,7 +1,8 @@
 import pandas as pd
 from src.analysis import (
-    cargar_csv, detectar_tipos, sugerir_ignorar, distribucion_escala,
-    resumen_escala, tabla_frecuencias, tabla_multiple,
+    cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
+    distribucion_escala, listar_texto, perfil_muestra,
+    tabla_frecuencias, tabla_multiple,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -66,3 +67,14 @@ def test_escala_media_mediana_dt_y_distribucion():
     d = distribucion_escala(df[col])
     assert dict(zip(d["valor"], d["n"])) == {2: 1, 3: 2, 4: 4, 5: 1}
     assert abs(d["pct"].sum() - 100.0) < 0.2
+
+
+def test_texto_lista_sin_vacios_y_perfil():
+    df = cargar_csv(CSV)
+    respuestas = listar_texto(df["¿Qué mejorarías?"])
+    assert len(respuestas) == 5  # 3 vacíos de 8
+    assert respuestas[0] == "Más opciones de leche vegetal"
+    p = perfil_muestra(df)
+    assert p["n_total"] == 8
+    assert p["n_valido_por_columna"]["¿Qué mejorarías?"] == 5
+    assert p["n_valido_por_columna"]["Rango de edad"] == 8

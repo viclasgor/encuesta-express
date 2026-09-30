@@ -115,6 +115,21 @@ def distribucion_escala(serie: pd.Series) -> pd.DataFrame:
     return tabla
 
 
+def listar_texto(serie: pd.Series) -> list[str]:
+    """Respuestas no vacías de texto abierto, en orden de llegada."""
+    return [v.strip() for v in serie.astype(str).tolist() if v.strip() != ""]
+
+
+def perfil_muestra(df: pd.DataFrame) -> dict:
+    """n total y n válido por columna."""
+    return {
+        "n_total": int(len(df)),
+        "n_valido_por_columna": {
+            col: int((df[col].astype(str).str.strip() != "").sum()) for col in df.columns
+        },
+    }
+
+
 def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
     """Menciones por opcion; % sobre nº de respondientes (puede sumar >100%)."""
     resp = serie.astype(str).str.strip()

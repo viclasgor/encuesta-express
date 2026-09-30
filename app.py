@@ -3,7 +3,8 @@ import streamlit as st
 import pandas as pd
 from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
-    distribucion_escala, tabla_frecuencias, tabla_multiple,
+    distribucion_escala, listar_texto, perfil_muestra,
+    tabla_frecuencias, tabla_multiple,
 )
 from src.plots import barras_horizontales, barras_verticales
 
@@ -29,6 +30,17 @@ except Exception as e:
 st.success(f"n total: {len(df)} · columnas: {len(df.columns)}")
 st.dataframe(df.head(5))
 
+# US-06: perfil de la muestra (n válido por pregunta).
+perfil = perfil_muestra(df)
+with st.expander("Perfil de la muestra"):
+    st.write(f"Respuestas totales: **{perfil['n_total']}**")
+    st.dataframe(
+        pd.DataFrame(
+            {"pregunta": list(perfil["n_valido_por_columna"].keys()),
+             "n_válido": list(perfil["n_valido_por_columna"].values())}
+        )
+    )
+
 # US-03: revision manual de tipos detectados + ignorar columnas.
 tipos_auto = detectar_tipos(df)
 with st.expander("Revisar tipos detectados (puedes corregir o ignorar columnas)"):
@@ -51,7 +63,16 @@ if not analizables:
 # Pregunta a analizar (la vista depende del tipo corregido: US-02/US-04/...).
 candidatas = [c for c in analizables if "edad" in c.lower()] or analizables
 col = st.selectbox("Pregunta a analizar", candidatas)
-if tipos_final[col] == "escala":
+if tipos_final[col] == "texto":
+    respuestas = listar_texto(df[col])
+    st.write(f"{len(respuestas)} respuestas (de {len(df)} totales, resto vacías). Sin gráfico.")
+    por_pag, n_pag = 10, 1
+    if len(respuestas) > por_pag:
+        n_pag = st.number_input("Página", min_value=1,
+                                max_value=(len(respuestas) - 1) // por_pag + 1, value=1)
+    for r in respuestas[(n_pag - 1) * por_pag:n_pag * por_pag]:
+        st.markdown(f"- {r}")
+elif tipos_final[col] == "escala":
     r = resumen_escala(df[col])
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Media", r["media"])

@@ -55,3 +55,4 @@
 - S7: Chi² solo si ≥80% de frecuencias esperadas ≥5 y ninguna <1; si no, aviso y bloqueo.
 - S8: El LLM solo redacta con números calculados; clave solo en `st.secrets`, nunca en el repo.
 - S9: La corrección manual de tipos vive en `session_state` y se reinicia al cambiar de archivo.
+- S10: El listado de texto abierto se pagina de 10 en 10.
