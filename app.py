@@ -22,11 +22,15 @@ st.set_page_config(page_title="EncuestaExpress", layout="wide",
                    page_icon="📊",
                    menu_items={"About": "EncuestaExpress: del CSV de tu encuesta al informe en minutos."})
 st.markdown(
-    "<div class='ee-brand'>📊 EncuestaExpress</div>"
+    "<div class='ee-kicker'>Informe de encuestas</div>"
+    "<div class='ee-brand'>EncuestaExpress</div>"
     "<div class='ee-tagline'>Del CSV de tu encuesta al informe en minutos.</div>"
-    "<style>.ee-brand{font-size:2.6rem;font-weight:800;color:#0B7285;"
-    "letter-spacing:-0.02em;line-height:1.1;margin-bottom:0}"
-    ".ee-tagline{color:#6C757D;font-size:1.05rem;margin-bottom:1rem}</style>",
+    "<style>.ee-kicker{font-size:0.8rem;font-weight:700;letter-spacing:0.14em;"
+    "text-transform:uppercase;color:#0B7285;margin-bottom:0}"
+    ".ee-brand{font-size:2.4rem;font-weight:800;color:#212529;"
+    "letter-spacing:-0.02em;line-height:1.1;margin-bottom:0;"
+    "border-bottom:3px solid #0B7285;display:inline-block;padding-bottom:0.15rem}"
+    ".ee-tagline{color:#6C757D;font-size:1.0rem;margin-top:0.4rem;margin-bottom:1rem}</style>",
     unsafe_allow_html=True,
 )
 
