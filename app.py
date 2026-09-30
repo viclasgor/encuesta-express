@@ -4,9 +4,9 @@ import pandas as pd
 from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
-    tabla_frecuencias, tabla_multiple, cruce_cat_cat,
+    tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
 )
-from src.plots import barras_horizontales, barras_verticales, barras_cruce
+from src.plots import barras_horizontales, barras_verticales, barras_cruce, barras_medias
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -139,8 +139,19 @@ with tab_cruces:
                     barras_cruce(r["n"].drop(index="Total").drop(columns="Total"),
                                  "agrupadas"),
                     use_container_width=True)
+        elif ((tipos_final[f_col], tipos_final[c_col]).count("escala") == 1
+                and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
+            col_esc = f_col if tipos_final[f_col] == "escala" else c_col
+            col_cat = c_col if tipos_final[f_col] == "escala" else f_col
+            r = cruce_escala_cat(df[col_esc], df[col_cat])
+            if r["excluidos"]:
+                st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
+            st.dataframe(r["tabla"])
+            if (r["tabla"]["n"] < 5).any():
+                st.warning("Algún grupo tiene menos de 5 respuestas: interpreta con cautela.")
+            st.plotly_chart(barras_medias(r["tabla"]), use_container_width=True)
         else:
-            st.info("El cruce escala×categórica llega en US-08.")
+            st.info("Elige dos categóricas, o una escala y una categórica.")
 
 with tab_datos:
     with st.expander("Perfil de la muestra"):

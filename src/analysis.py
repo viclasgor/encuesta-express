@@ -163,3 +163,17 @@ def cruce_cat_cat(s_filas: pd.Series, s_columnas: pd.Series, base: str = "fila")
     else:
         pct = (ct.div(ct.sum(axis=1), axis=0) * 100).round(1)
     return {"n": n, "pct": pct, "excluidos": excluidos, "base": base}
+
+
+def cruce_escala_cat(s_escala: pd.Series, s_grupo: pd.Series) -> dict:
+    """Media, DT y n de la escala por cada grupo. Vacios excluidos."""
+    e = pd.to_numeric(s_escala.astype(str).str.strip(), errors="coerce")
+    g = s_grupo.astype(str).str.strip()
+    mask = e.notna() & (g != "")
+    excluidos = int((~mask).sum())
+    agg = e[mask].groupby(g[mask]).agg(["mean", "std", "count"]).round(3)
+    agg.columns = ["media", "dt", "n"]
+    tabla = agg.reset_index()
+    tabla.columns = ["grupo", "media", "dt", "n"]
+    tabla["dt"] = tabla["dt"].fillna(0.0)  # n=1: sin dispersión que mostrar
+    return {"tabla": tabla, "excluidos": excluidos}

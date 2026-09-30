@@ -29,3 +29,10 @@ def barras_cruce(tabla_wide: pd.DataFrame, modo: str = "apiladas") -> object:
     fig.update_layout(xaxis_title="", yaxis_title="%" if modo == "apiladas" else "n",
                       height=360)
     return fig
+
+
+def barras_medias(tabla: pd.DataFrame) -> object:
+    # Espera columnas grupo/media de cruce_escala_cat.
+    fig = px.bar(tabla, x="grupo", y="media", text="media")
+    fig.update_layout(xaxis_title="", yaxis_title="media", height=320)
+    return fig

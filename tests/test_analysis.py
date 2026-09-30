@@ -2,7 +2,7 @@ import pandas as pd
 from src.analysis import (
     cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
-    tabla_frecuencias, tabla_multiple, cruce_cat_cat,
+    tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -96,3 +96,14 @@ def test_cruce_excluye_vacios_e_informa():
     r = cruce_cat_cat(df["Rango de edad"], df["¿Qué mejorarías?"])
     assert r["excluidos"] == 3
     assert r["n"].loc["Total", "Total"] == 5
+
+
+def test_cruce_escala_cat_medias_por_grupo():
+    df = cargar_csv(CSV)
+    col_esc = "Valora de 1 a 5 tu satisfacción con las cafeterías de tu zona"
+    r = cruce_escala_cat(df[col_esc], df["Rango de edad"])
+    assert r["excluidos"] == 0
+    d = dict(zip(r["tabla"]["grupo"], r["tabla"]["media"]))
+    assert d == {"18-24": 3.0, "25-34": 3.667, "35-44": 4.0, "45-54": 4.0}
+    assert dict(zip(r["tabla"]["grupo"], r["tabla"]["n"])) == {
+        "18-24": 2, "25-34": 3, "35-44": 2, "45-54": 1}
