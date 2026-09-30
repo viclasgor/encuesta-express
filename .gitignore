@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+
+# Variables y secretos (nunca subir)
+.env
+.env.*
+*.pem
+*.key
+
+# Tests y caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Streamlit / editores
+.streamlit/secrets.toml
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
