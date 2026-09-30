@@ -3,17 +3,20 @@
 ## Descripción
 EncuestaExpress: app web local en Streamlit donde se sube un CSV de Google Forms y se obtiene informe descriptivo automático (perfil, frecuencias, gráficos, 1 cruce, export HTML). Cálculos deterministas con pandas, nunca con LLM. Usuario: no-programador que necesita resultados en minutos. Detalle en `docs/PROBLEMA.md`, `docs/ALCANCE.md`, `docs/BACKLOG.md`.
 
-## Stack (no añadir sin preguntar)
-- Python 3.10+, Streamlit, pandas, Plotly, pytest.
-- Sin LLM en runtime, sin backend/BD, sin PDF/Word libs. HTML con Plotly/pandas embebido.
+## Stack (solo se amplía con confirmación explícita)
+- Python 3.10+, Streamlit, pandas, Plotly, pytest + `openpyxl` (.xlsx, US-14), `fpdf2` (PDF mínimo, US-16), `scipy` (chi², US-17). Todo fijado en `requirements.txt`.
+- Sin LLM en runtime, sin backend/BD. HTML con Plotly embebido.
 
 ## Estructura propuesta
 ```
 app.py                  # solo UI Streamlit, sin cálculos
-src/analysis.py         # lógica pura pandas (detección tipos, frecuencias, cruces) — testeable
+src/analysis.py         # lógica pura pandas (carga, tipos, frecuencias, cruces, filtro)
+src/chi2.py             # chi-cuadrado con condiciones de aplicación
 src/plots.py            # funciones que devuelven figuras Plotly (sin streamlit dentro)
-src/export_html.py      # genera informe autónomo
-tests/test_analysis.py  # tests deterministas con CSV ejemplo
+src/export_html.py      # informe HTML autónomo + CSV de tablas
+src/export_pdf.py       # PDF mínimo (portada + tablas)
+fonts/DejaVuSans.ttf    # fuente del PDF (ver fonts/LICENCIA-FUENTE.txt)
+tests/ (+ fixtures/)    # tests deterministas (CSV + .xlsx de ejemplo)
 data/ejemplo_encuesta.csv # demo café 8 filas (aportada por usuario, anonimizada)
 docs/                   # PROBLEMA, ALCANCE, BACKLOG
 requirements.txt

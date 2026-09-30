@@ -1,37 +1,47 @@
 # EncuestaExpress
 
-Sube el CSV de tu encuesta (Google Forms) y obtén un informe automático: perfil de muestra, tablas + gráficos por pregunta, cruce entre dos preguntas y descarga en HTML.
+**Problema que resuelve:** quien hace una encuesta pequeña en Google Forms tarda horas en pasar el CSV a tablas y gráficos presentables en Excel, con errores típicos en multirrespuesta y sin documentar los sin-respuesta. EncuestaExpress convierte ese CSV (o .xlsx) en un informe automático en minutos.
 
-Cálculos deterministas con pandas. Sin LLM para calcular. Despliegue en Streamlit Community Cloud; local como plan B.
+Sube tu archivo y obtén: perfil de la muestra, tabla + gráfico por pregunta según su tipo, cruces entre dos preguntas (con chi-cuadrado cuando aplica), filtro por segmento y descargas en HTML, PDF y CSV.
 
-> URL Cloud: _PEGAR AQUÍ TU URL DE STREAMLIT CLOUD_ (criterio de hecho del MVP).
+Cálculos deterministas con pandas/scipy. Sin LLM para calcular. Despliegue en Streamlit Community Cloud; local como plan B.
 
-## Funcionalidades MVP
-- Carga CSV estándar Forms (UTF-8, coma) + vista previa y n total.
-- Autodetección de tipos (timestamp, escala 1-5, única, múltiple, texto, email) con corrección manual.
-- Por pregunta: única → tabla n/% + barras H; múltiple → % sobre respondientes + barras H; escala → media/mediana/DT + barras V; texto → listado.
-- Cruce cat×cat y escala×cat con aviso si grupo <5.
-- Exporta informe HTML autónomo (abre offline).
+> URL Cloud: _PEGAR AQUÍ TU URL DE STREAMLIT CLOUD_
+
+## Funcionalidades
+- Carga CSV (UTF-8, coma) y .xlsx (primera hoja) + vista previa y n total.
+- Autodetección de tipos (timestamp, escala 1-5, única, múltiple, texto, email) con corrección manual e ignorado de columnas.
+- Por pregunta: única → tabla n/% + barras H; múltiple → % sobre respondientes + barras H; escala → media/mediana/DT + barras V; texto → listado paginado.
+- Cruces: cat×cat (% fila/columna, apiladas/agrupadas), escala×cat (medias), múltiple×cat (descriptivo); aviso si grupo <5; chi-cuadrado con V de Cramér e interpretación en llano solo cuando las esperadas lo permiten.
+- Filtro por segmento aplicado a todo el informe.
+- Exporta informe HTML autónomo (abre offline), PDF mínimo y CSV por tabla.
 
 ## Stack
-- Python 3.10+, Streamlit, pandas, Plotly, pytest.
+- Python 3.10+, Streamlit==1.64.0, pandas==3.0.6, Plotly==7.1.0, openpyxl==3.1.5, fpdf2==2.8.9, scipy==1.18.1, pytest==9.1.1 (todo fijado en `requirements.txt`).
 
 ## Ejecutar en local (plan B para la demo)
 ```powershell
 pip install -r requirements.txt
 streamlit run app.py
-pytest -q
+python -m pytest -q
 ```
-Demo con `data/ejemplo_encuesta.csv`.
+Demo con `data/ejemplo_encuesta.csv` (o `tests/fixtures/ejemplo_encuesta.xlsx`).
+
+## Desplegar en Cloud
+Ver `docs/DESPLIEGUE.md`. Tras desplegar, pega la URL arriba.
 
 ## Estructura
-- `app.py` — UI Streamlit
-- `src/analysis.py` — lógica pandas pura
-- `src/plots.py`, `src/export_html.py`
-- `tests/`, `data/`, `docs/`
-- `AGENTS.md`, `PROMPT-LOG.md`
+- `app.py` — UI Streamlit (sin cálculos)
+- `src/analysis.py` — lógica pandas pura (carga, tipos, frecuencias, cruces, filtro)
+- `src/chi2.py` — chi-cuadrado con condiciones de aplicación
+- `src/plots.py` — figuras Plotly (sin streamlit dentro)
+- `src/export_html.py`, `src/export_pdf.py` — informes descargables
+- `fonts/` — DejaVuSans.ttf para el PDF (ver `fonts/LICENCIA-FUENTE.txt`)
+- `tests/` (+ `tests/fixtures/`) — tests deterministas
+- `data/ejemplo_encuesta.csv` — demo café, 8 filas anonimizadas
+- `docs/` — PROBLEMA, ALCANCE, BACKLOG, DESPLIEGUE
 
 ## Docs
-- `docs/PROBLEMA.md`, `docs/ALCANCE.md`, `docs/BACKLOG.md`
+- `docs/PROBLEMA.md`, `docs/ALCANCE.md` (incluye supuestos S1–S16), `docs/BACKLOG.md`
 
-Estado: Incremento 1 (US-01+US-02) implementado y verificado en local; pendiente tu prueba en navegador + deploy Cloud.
+Estado: Must + Should completos y verificados en local (20 tests); pendiente tu prueba en navegador + deploy Cloud.

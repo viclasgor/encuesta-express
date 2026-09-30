@@ -30,3 +30,11 @@
 - **IA falló en / corregí:** 1) `pd.to_numeric(list)` devuelve ndarray sin `.notna` → escala caía a categórica; corregido con `pd.Series`. 2) `pip install` cortado por timeout y `python -m streamlit` sin módulo; reinstalado con `python -m pip`. 3) Arranque inicial falló; verificado tras reinstalar (health 200).
 - **Cómo lo detecté:** `python -m pytest -q` (1 fallo en escala); `python -m streamlit run` (No module named streamlit); health check `/_stcore/health` → 200.
 - **Decisión técnica mía:** validada la tuya (Must→Should, S1-S4, Cloud ahora documentado); heurística múltiple exige ≥2 celdas con ", " para no confundir texto con coma.
+
+---
+### 2026-09-30 — Sesión autónoma Must+Should (US-03→US-17, sin US-01/02 que ya estaban)
+- **Pedí (resumen):** completar Must y Should en orden, 1 commit/historia, sin push; parar solo ante deps nuevas y claves API; chi² con esperadas y aviso; informe final + README.
+- **IA hizo bien:** 13 historias con tests en `src/` (20 tests verdes); deps añadidas solo tras tu OK (`openpyxl==3.1.5`, `fpdf2==2.8.9`, `scipy==1.18.1`); PDF mínimo con DejaVu vendored; supuestos S9–S16 anotados; README reescrito.
+- **IA falló en / corregí:** 1) patrón de `edit` que comía líneas vecinas (3 casos: test mezclado, `tabla_multiple` sin `def`, `col_esc` borrado) → detectado con `grep`/`pytest`, reparado y verificado. 2) `barras_cruce` con índice sin nombre en múltiple (KeyError 'index') → `rename_axis` explícito. 3) fpdf2: cursor tras `multi_cell` (sin espacio) → `new_x/new_y`; cabecera de tabla pedía negrita inexistente → `FontFace(emphasis=None)`. 4) test DT con tolerancia 1e-9 vs redondeo a 3 decimales → tolerancia 1e-3. 5) `cruzables` excluía a `multiple` (US-12 inalcanzable) → incluido.
+- **Cómo lo detecté:** `python -m pytest -q` tras cada historia; `py_compile`/imports; arranque con health `/_stcore/health` → 200 antes de cada commit; puerto ocupado por servidor viejo → lo maté y verifiqué de nuevo.
+- **Decisión técnica mía:** Yates por defecto en 2×2 (S16); V de Cramér con `min(r-1,c-1)`; HTML con Plotly inline (S13); PDF sin gráficos (S15); filtro = un valor global (S6).

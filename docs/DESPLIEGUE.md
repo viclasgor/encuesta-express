@@ -17,7 +17,7 @@
 2. Entra en https://share.streamlit.io → **New app** → **Deploy a public app from GitHub**.
 3. Elige: Repository = tu repo, Branch = `main`, Main file path = `app.py`.
 4. **Advanced settings**: Python version = 3.10+ (3.11 recomendado). No añadas secrets.
-5. Pulsa **Deploy**. Espera 2-5 min. Si falla por versión, fija en `requirements.txt` (ya incluye `streamlit>=1.32`, `pandas>=2.0`, `plotly>=5.18`).
+5. Pulsa **Deploy**. Espera 2-5 min. Si falla, revisa que `requirements.txt` lleve versiones fijadas (van todas con `==`).
 6. Verifica en la URL pública:
    - Activa "Usar CSV de ejemplo" → debe mostrar n total 8, preview 5 filas.
    - Elige `Rango de edad` → tabla n/% suma ~100% + barras horizontales.
