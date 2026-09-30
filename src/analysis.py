@@ -89,3 +89,21 @@ def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:
     tabla.attrs["n_valido"] = n_valido
     tabla.attrs["n_total"] = n_total
     return tabla
+
+
+def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
+    """Menciones por opcion; % sobre nº de respondientes (puede sumar >100%)."""
+    resp = serie.astype(str).str.strip()
+    validas = resp[resp != ""]
+    n_resp = int(len(validas))
+    n_total = int(len(serie))
+    conteo: dict[str, int] = {}
+    for v in validas:
+        for op in [p.strip() for p in v.split(sep) if p.strip() != ""]:
+            conteo[op] = conteo.get(op, 0) + 1
+    tabla = pd.DataFrame({"opcion": list(conteo.keys()), "menciones": list(conteo.values())})
+    tabla = tabla.sort_values("menciones", ascending=False).reset_index(drop=True)
+    tabla["pct_resp"] = (tabla["menciones"] / n_resp * 100).round(1) if n_resp else 0.0
+    tabla.attrs["n_respondientes"] = n_resp
+    tabla.attrs["n_total"] = n_total
+    return tabla

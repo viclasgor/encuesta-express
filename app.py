@@ -1,7 +1,9 @@
 """EncuestaExpress - Incremento 2 (en curso): UI + informe por tipos (calculos en src/)."""
 import streamlit as st
 import pandas as pd
-from src.analysis import cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias
+from src.analysis import (
+    cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias, tabla_multiple,
+)
 from src.plots import barras_horizontales
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
@@ -45,10 +47,24 @@ if not analizables:
     st.warning("Has ignorado todas las columnas. Activa al menos una para ver el informe.")
     st.stop()
 
-# US-02: una categorica unica (por defecto Rango de edad si existe)
+# Pregunta a analizar (la vista depende del tipo corregido: US-02/US-04/...).
 candidatas = [c for c in analizables if "edad" in c.lower()] or analizables
 col = st.selectbox("Pregunta a analizar", candidatas)
-tabla = tabla_frecuencias(df[col])
-st.write(f"n valido: {tabla.attrs['n_valido']} · n total: {tabla.attrs['n_total']}")
-st.dataframe(tabla)
-st.plotly_chart(barras_horizontales(tabla), use_container_width=True)
+if tipos_final[col] == "multiple":
+    tabla = tabla_multiple(df[col])
+    st.write(
+        f"n respondientes: {tabla.attrs['n_respondientes']} · "
+        f"n total: {tabla.attrs['n_total']} · % sobre respondientes"
+    )
+    st.dataframe(tabla)
+    st.plotly_chart(
+        barras_horizontales(
+            tabla.rename(columns={"opcion": "categoria", "menciones": "n"})
+        ),
+        use_container_width=True,
+    )
+else:
+    tabla = tabla_frecuencias(df[col])
+    st.write(f"n valido: {tabla.attrs['n_valido']} · n total: {tabla.attrs['n_total']}")
+    st.dataframe(tabla)
+    st.plotly_chart(barras_horizontales(tabla), use_container_width=True)

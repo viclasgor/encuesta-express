@@ -1,5 +1,5 @@
 import pandas as pd
-from src.analysis import cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias
+from src.analysis import cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias, tabla_multiple
 
 CSV = "data/ejemplo_encuesta.csv"
 
@@ -39,3 +39,14 @@ def test_frecuencias_rango_edad_suman_100():
     # 25-34 aparece 3 veces -> 37.5%
     fila = t[t["categoria"] == "25-34"].iloc[0]
     assert fila["n"] == 3
+
+
+def test_multiple_pct_sobre_respondientes():
+    df = cargar_csv(CSV)
+    t = tabla_multiple(df["¿Qué factores influyen en tu elección?"])
+    assert t.attrs["n_respondientes"] == 8
+    assert t.attrs["n_total"] == 8
+    d = dict(zip(t["opcion"], t["menciones"]))
+    assert d == {"Precio": 5, "Ubicación": 4, "Calidad": 4, "Ambiente": 3}
+    assert t[t["opcion"] == "Precio"].iloc[0]["pct_resp"] == 62.5
+    assert t["pct_resp"].sum() > 100  # % sobre respondientes, no sobre menciones
