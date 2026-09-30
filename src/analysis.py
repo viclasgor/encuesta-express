@@ -91,6 +91,30 @@ def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:
     return tabla
 
 
+def resumen_escala(serie: pd.Series) -> dict:
+    """Media, mediana y DT (muestral) sobre valores 1-5; vacios excluidos."""
+    nums = pd.to_numeric(serie[serie.astype(str).str.strip() != ""], errors="coerce").dropna()
+    return {
+        "media": round(float(nums.mean()), 3) if len(nums) else None,
+        "mediana": round(float(nums.median()), 3) if len(nums) else None,
+        "dt": round(float(nums.std()), 3) if len(nums) > 1 else 0.0,
+        "n_valido": int(len(nums)),
+        "n_total": int(len(serie)),
+    }
+
+
+def distribucion_escala(serie: pd.Series) -> pd.DataFrame:
+    """Frecuencia de cada valor de la escala sobre n valido."""
+    nums = pd.to_numeric(serie[serie.astype(str).str.strip() != ""], errors="coerce").dropna()
+    n_valido = int(len(nums))
+    conteo = nums.value_counts().sort_index()
+    tabla = pd.DataFrame({"valor": conteo.index, "n": conteo.values})
+    tabla["pct"] = (tabla["n"] / n_valido * 100).round(1) if n_valido else 0.0
+    tabla.attrs["n_valido"] = n_valido
+    tabla.attrs["n_total"] = int(len(serie))
+    return tabla
+
+
 def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
     """Menciones por opcion; % sobre nº de respondientes (puede sumar >100%)."""
     resp = serie.astype(str).str.strip()

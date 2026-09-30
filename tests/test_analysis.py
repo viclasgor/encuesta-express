@@ -1,5 +1,8 @@
 import pandas as pd
-from src.analysis import cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias, tabla_multiple
+from src.analysis import (
+    cargar_csv, detectar_tipos, sugerir_ignorar, distribucion_escala,
+    resumen_escala, tabla_frecuencias, tabla_multiple,
+)
 
 CSV = "data/ejemplo_encuesta.csv"
 
@@ -50,3 +53,16 @@ def test_multiple_pct_sobre_respondientes():
     assert d == {"Precio": 5, "Ubicación": 4, "Calidad": 4, "Ambiente": 3}
     assert t[t["opcion"] == "Precio"].iloc[0]["pct_resp"] == 62.5
     assert t["pct_resp"].sum() > 100  # % sobre respondientes, no sobre menciones
+
+
+def test_escala_media_mediana_dt_y_distribucion():
+    df = cargar_csv(CSV)
+    col = "Valora de 1 a 5 tu satisfacción con las cafeterías de tu zona"
+    r = resumen_escala(df[col])
+    assert r["media"] == 3.625
+    assert r["mediana"] == 4.0
+    assert abs(r["dt"] - float(pd.Series([4, 3, 4, 5, 2, 4, 3, 4]).std())) < 1e-3  # se muestran 3 decimales
+    assert r["n_valido"] == 8 and r["n_total"] == 8
+    d = distribucion_escala(df[col])
+    assert dict(zip(d["valor"], d["n"])) == {2: 1, 3: 2, 4: 4, 5: 1}
+    assert abs(d["pct"].sum() - 100.0) < 0.2

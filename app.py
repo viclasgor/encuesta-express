@@ -2,9 +2,10 @@
 import streamlit as st
 import pandas as pd
 from src.analysis import (
-    cargar_csv, detectar_tipos, sugerir_ignorar, tabla_frecuencias, tabla_multiple,
+    cargar_csv, detectar_tipos, sugerir_ignorar, resumen_escala,
+    distribucion_escala, tabla_frecuencias, tabla_multiple,
 )
-from src.plots import barras_horizontales
+from src.plots import barras_horizontales, barras_verticales
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "ignorar"]
 
@@ -50,7 +51,17 @@ if not analizables:
 # Pregunta a analizar (la vista depende del tipo corregido: US-02/US-04/...).
 candidatas = [c for c in analizables if "edad" in c.lower()] or analizables
 col = st.selectbox("Pregunta a analizar", candidatas)
-if tipos_final[col] == "multiple":
+if tipos_final[col] == "escala":
+    r = resumen_escala(df[col])
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Media", r["media"])
+    c2.metric("Mediana", r["mediana"])
+    c3.metric("DT", r["dt"])
+    c4.metric("n válido / total", f"{r['n_valido']} / {r['n_total']}")
+    dist = distribucion_escala(df[col])
+    st.dataframe(dist)
+    st.plotly_chart(barras_verticales(dist), use_container_width=True)
+elif tipos_final[col] == "multiple":
     tabla = tabla_multiple(df[col])
     st.write(
         f"n respondientes: {tabla.attrs['n_respondientes']} · "
