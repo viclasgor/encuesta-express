@@ -121,10 +121,10 @@ try:
     else:
         st.html("<div class='ee-inicio'>"
                 "<div class='ee-celda'>Sube tu archivo para empezar</div>"
-                "<div>### Empieza en 3 pasos</div>"
-                "<div>1. **Sube tu CSV/Excel** desde la barra lateral (o prueba el ejemplo).<br>"
-                "2. **Revisa los tipos detectados** y corrige si hace falta.<br>"
-                "3. **Explora el informe**, cruza variables y descarga el resultado.</div>"
+                "<h3>Empieza en 3 pasos</h3>"
+                "<div>1. <b>Sube tu CSV/Excel</b> desde la barra lateral (o prueba el ejemplo).<br>"
+                "2. <b>Revisa los tipos detectados</b> y corrige si hace falta.<br>"
+                "3. <b>Explora el informe</b>, cruza variables y descarga el resultado.</div>"
                 "</div>")
         if st.button("Probar con datos de ejemplo", type="primary"):
             st.session_state["usar_ejemplo"] = True
