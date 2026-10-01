@@ -39,9 +39,7 @@ st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
         "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
 st.html("<div class='ee-marco-cols' aria-hidden='true'><span>A</span><span>B</span>"
         "<span>C</span><span>D</span><span>E</span><span>F</span><span>G</span>"
-        "<span>H</span></div>"
-        "<div class='ee-marco-filas' aria-hidden='true'>" +
-        "".join(f"<span>{i}</span>" for i in range(1, 31)) + "</div>")
+        "<span>H</span></div>")
 
 
 def slug_de(col: str) -> str:
@@ -63,7 +61,8 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
     base = None
     if reparto:
         ref = "pct" if "pct" in tabla.columns else ("pct_resp" if "pct_resp" in tabla.columns else "n")
-        base = float(tabla[ref].max()) or 1.0
+        datos = tabla[tabla.index != "Total"] if "Total" in tabla.index else tabla
+        base = float(datos[ref].max()) or 1.0
     for i, (idx, fila) in enumerate(tabla.iterrows()):
         cls = " class='ee-total'" if idx == "Total" else ""
         h.append(f"<tr{cls}>")
@@ -80,13 +79,23 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
             else:
                 h.append(f"<td>{_esc(str(v))}</td>")
         if reparto:
-            ref = "pct" if "pct" in tabla.columns else ("pct_resp" if "pct_resp" in tabla.columns else "n")
-            ancho = float(fila[ref]) / base * 100
-            color = SERIES[i % len(SERIES)]
-            h.append(f"<td><div class='ee-reparto' style='width:{ancho:.1f}%;"
-                     f"background:{color}'></div></td>")
+            if idx == "Total":
+                h.append("<td></td>")
+            else:
+                ref = "pct" if "pct" in tabla.columns else ("pct_resp" if "pct_resp" in tabla.columns else "n")
+                ancho = float(fila[ref]) / base * 100
+                color = SERIES[i % len(SERIES)]
+                h.append(f"<td><div class='ee-reparto' style='width:{ancho:.1f}%;"
+                         f"background:{color}'></div></td>")
         h.append("</tr>")
     return "".join(h) + "</tbody></table>"
+
+
+def con_total(tabla: pd.DataFrame) -> pd.DataFrame:
+    """Fila Total solo para mostrar (el CSV descargado no la lleva)."""
+    fila = pd.DataFrame([{"categoria": "Total", "n": int(tabla["n"].sum()),
+                           "pct": round(float(tabla["pct"].sum()), 1)}], index=["Total"])
+    return pd.concat([tabla, fila])
 
 
 def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
@@ -152,7 +161,7 @@ with tab_inicio:
                     and "frecuencia" in c.lower())
     nv, nt = n_valido_total(df_ej, col_prev)
     barra_formula(numero_pregunta(df_ej, col_prev), col_prev, "categorica", nv, nt)
-    st.html(estilo_hoja(tabla_frecuencias(df_ej[col_prev]), reparto=True))
+    st.html(estilo_hoja(con_total(tabla_frecuencias(df_ej[col_prev])), reparto=True))
     st.html("<div class='ee-pasos'><div class='ee-paso'><b>Sube el archivo</b>"
             "<span>CSV de Google Forms o Excel (xlsx).</span></div>"
             "<div class='ee-paso'><b>Revisa los tipos</b>"
@@ -278,7 +287,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         tabla = tabla_frecuencias(df[col])
         t1, t2 = st.columns([1, 1.2])
         with t1:
-            st.html(estilo_hoja(tabla, reparto=True))
+            st.html(estilo_hoja(con_total(tabla), reparto=True))
             boton_csv(tabla, "frecuencias")
         with t2:
             st.plotly_chart(barras_horizontales(tabla), width="stretch",

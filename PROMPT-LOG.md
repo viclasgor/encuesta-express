@@ -86,3 +86,11 @@
 - **IA falló en / corregí:** nada.
 - **Cómo lo detecté:** reporte del usuario + captura headless comparada con la maqueta.
 - **Decisión técnica mía:** el `% del cruce` vive ahora en su pestaña (más claro que global).
+
+---
+### 2026-10-01 — Rail estatico imposible + fila Total estilo maqueta
+- **Pedí (resumen):** rail de filas estático como columna congelada, celdas como la maqueta, todo en `main`, anotarlo en PROMPT-LOG.
+- **IA hizo bien:** verificado en captura que el rail scrolleaba (fixed derrotado por transform de Streamlit, sticky por overflow); rail eliminado (así roto parecía bug) y letras como cabecera estática; fila Total solo en pantalla (CSV limpio) con Reparto sin romper; celdas más altas; 23 verdes + arranque + captura con scroll.
+- **IA falló en / corregí:** mi patrón de `edit` volvió a comerse 2 líneas (`tabla_de`, `col_esc`) → reparado con `grep`+lectura antes de cada edición; Total con `ignore_index` perdía marca y sesgaba Reparto → índice "Total" + base sin esa fila.
+- **Cómo lo detecté:** captura con scroll 2500px; `pytest -q`; health 200.
+- **Decisión técnica mía:** congelar de verdad exige selectores frágiles que pueden romper el scroll (desaconsejado); Total no entra en múltiples (sumar % >100% engañaría).

@@ -40,21 +40,19 @@
 }
 
 /* --- Marco decorativo (sutil; oculto bajo 768 px) --- */
+/* Cabecera de columnas decorativa (estatica: Streamlit derrota fixed/sticky
+   con transform/overflow en sus contenedores; congelarla exigiría selectores
+   internos frágiles y podría romper el scroll). */
 .ee-marco-cols {
-  position: sticky; top: 0; z-index: 5; display: flex;
+  display: flex;
   background: transparent; border-bottom: 1px solid rgba(211, 224, 208, 0.25);
 }
 .ee-marco-cols span {
   flex: 1; text-align: center; font-size: 11px; font-weight: 600;
   color: rgba(211, 224, 208, 0.5); padding: 2px 0;
 }
-.ee-marco-filas {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 30px; z-index: 4;
-  display: flex; flex-direction: column; padding-top: 220px;
-}
-.ee-marco-filas span { text-align: center; font-size: 10px; color: rgba(211, 224, 208, 0.35); height: 24px; }
 @media (max-width: 768px) {
-  .ee-marco-cols, .ee-marco-filas { display: none; }
+  .ee-marco-cols { display: none; }
 }
 
 /* --- Hero (celda seleccionada) --- */
@@ -101,7 +99,7 @@ table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
   border: 1px solid rgba(211, 224, 208, 0.25); padding: 5px 10px; text-align: left;
 }
 .ee-hoja td {
-  border: 1px solid rgba(211, 224, 208, 0.2); padding: 5px 10px; color: var(--papel);
+  border: 1px solid rgba(211, 224, 208, 0.2); padding: 8px 12px; color: var(--papel);
 }
 .ee-hoja td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ee-hoja tr.ee-total td { background: var(--oscuro); font-weight: 700; }
