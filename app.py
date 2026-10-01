@@ -248,26 +248,16 @@ def _html_doc() -> str:
     return generar_informe_html("Informe EncuestaExpress", str(date.today()),
                                 len(df), bloques, cruce)
 
-# --- Cabecera: franja, fx, toolbar con menús reales ---
-st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
-        "<span class='ee-nombre'>EncuestaExpress</span>"
-        f"<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span>"
-        f"<span class='ee-archivo'>{_esc(nombre_archivo())}"
-        + (f" · {len(df)} filas × {len(df.columns)} columnas" if df is not None else "")
-        + "</span></div>")
-_sel = st.session_state.get("cruce_filas")
-if df is not None and _sel in (df.columns if df is not None else []):
-    _nv, _nt = n_valido_total(df, _sel)
-    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
-            f"<span class='ee-fx'>fx</span><span>P{numero_pregunta(df, _sel)} · "
-            f"{ETIQUETAS_TIPO.get(tipos_final.get(_sel, ''), '')} · {_esc(_sel)}</span></div>")
-else:
-    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
-            "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
-
-with st.container():
-    c_m1, c_m2, c_m3, c_m4, c_est = st.columns([1, 1, 1, 1, 2])
-    with c_m1:
+# --- Cabecera en contenedor con key (primer elemento visual) ---
+with st.container(key="ee_header"):
+    st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
+            "<span class='ee-nombre'>EncuestaExpress</span>"
+            f"<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span>"
+            f"<span class='ee-archivo'>{_esc(nombre_archivo())}"
+            + (f" · {len(df)} filas × {len(df.columns)} columnas" if df is not None else "")
+            + "</span></div>")
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
         with st.popover("Archivo"):
             if st.button("Subir otro archivo", key="m_arch_nuevo"):
                 limpiar_datos()
@@ -278,7 +268,7 @@ with st.container():
             if usa_ejemplo and st.button("Dejar el ejemplo", key="m_arch_quitar"):
                 limpiar_datos()
                 st.rerun()
-    with c_m2:
+    with m2:
         with st.popover("Datos", disabled=df is None):
             if df is not None:
                 st.subheader("Filtro por segmento")
@@ -302,23 +292,60 @@ with st.container():
                             key=f"tipo_{col}")
             else:
                 st.caption("Carga datos para ver opciones.")
-    with c_m3:
+    with m3:
         with st.popover("Informe", disabled=df is None or not analizables):
             if df is not None and analizables:
                 st.download_button("Descargar HTML", _html_doc(), "informe.html",
                                    "text/html", key="m_dl_html")
             else:
                 st.caption("Carga datos para descargar.")
-    with c_m4:
+    with m4:
         if st.button("Ayuda", key="m_ayuda"):
             ayuda_dialog()
-    with c_est:
+
+# --- Barra de herramientas con botones reales + estado ---
+with st.container(key="ee_toolbar"):
+    t1, t2, t3, t4, t_est = st.columns([1, 1, 1, 1, 2])
+    with t1:
+        if st.button("Subir archivo", key="tb_subir"):
+            limpiar_datos()
+            st.rerun()
+    with t2:
+        if st.button("Datos de ejemplo", key="tb_ejemplo"):
+            st.session_state["usar_ejemplo"] = True
+            st.rerun()
+    with t3:
+        if df is not None and analizables:
+            bloques_tb, cruce_tb = _bloques_informe()
+            st.download_button("Descargar informe",
+                               generar_informe_html("Informe EncuestaExpress",
+                                                    str(date.today()), len(df),
+                                                    bloques_tb, cruce_tb),
+                               "informe.html", "text/html", key="tb_dl")
+        else:
+            st.button("Descargar informe", key="tb_dl_off", disabled=True,
+                      help="Carga datos para activar la descarga.")
+    with t4:
+        if df is not None:
+            base_cruce = st.radio("% sobre", ["fila", "columna"], key="pct_base",
+                                  help="Base del cruce categórica×categórica.",
+                                  horizontal=True)
+    with t_est:
         if df is None:
             st.html("<div class='ee-estado-top'><span class='ee-dot'></span>Listo</div>")
         else:
             st.html("<div class='ee-estado-top'><span class='ee-dot ee-ok'></span>"
                     f"Datos cargados · n={len(df)}"
                     + (" · ⚠ revisa calidad" if hay_calidad else "") + "</div>")
+
+_sel = st.session_state.get("cruce_filas")
+if df is not None and _sel in list(df.columns):
+    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
+            f"<span class='ee-fx'>fx</span><span>P{numero_pregunta(df, _sel)} · "
+            f"{ETIQUETAS_TIPO.get(tipos_final.get(_sel, ''), '')} · {_esc(_sel)}</span></div>")
+else:
+    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
+            "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
 
 tab_inicio, tab_informe, tab_cruces, tab_exportar, tab_mas = st.tabs(
     ["Inicio", "Informe", "Cruces", "Exportar", "+"])
@@ -456,8 +483,7 @@ with tab_cruces:
             f_col = st.selectbox("Filas", cruzables, key="cruce_filas")
             c_col = st.selectbox("Columnas", [c for c in cruzables if c != f_col],
                                  key="cruce_cols")
-            base_cruce = st.radio("% sobre", ["fila", "columna"], key="pct_base",
-                                  help="Base de los porcentajes del cruce categórica×categórica.")
+            # (% fila/columna vive en la toolbar; aquí se usa su valor.)
             if tipos_final[f_col] == "categorica" and tipos_final[c_col] == "categorica":
                 r = cruce_cat_cat(df[f_col], df[c_col], base=base_cruce)
                 if r["excluidos"]:
@@ -581,9 +607,20 @@ with tab_mas:
         st.session_state["usar_ejemplo"] = True
         st.rerun()
 
-# --- Pie: estadísticas, enlaces, privacidad y estado ---
-_sel2 = st.session_state.get("cruce_filas")
-with st.container(border=True):
+# --- Pie en contenedor con key (último elemento; sticky, nunca fixed) ---
+with st.container(key="ee_footer"):
+    if df is None:
+        _estado = ("<span>Listo</span><span>0 respuestas</span>"
+                   "<span>0 preguntas</span><span>Esperando archivo</span>")
+    else:
+        origen = str(archivo.name) if archivo is not None else "datos de ejemplo"
+        segmento = (f" · segmento {f_col_f}={f_val_f}"
+                    if f_col_f not in (None, "(sin filtro)") and f_val_f != "Todos" else "")
+        _estado = (f"<span>Listo</span><span>{len(df)} respuestas</span>"
+                   f"<span>{len(analizables)} preguntas</span>"
+                   f"<span>{_esc(origen)}{_esc(segmento)}</span>")
+    st.html(f"<div class='ee-estado'>{_estado}</div>")
+    _sel2 = st.session_state.get("cruce_filas")
     if df is not None and _sel2 in list(df.columns):
         t2 = tipos_final.get(_sel2)
         st.caption(f"Pregunta seleccionada: {_esc(_sel2)}")
@@ -603,20 +640,9 @@ with st.container(border=True):
             s3.metric("Moda", f.sort_values("n", ascending=False).iloc[0]["categoria"])
         else:
             st.caption("Estadísticas disponibles para escala y categórica única.")
-    else:
+    elif df is not None:
         st.caption("Elige una pregunta en Cruces (Filas) para ver sus estadísticas aquí.")
-
-st.html("<div class='ee-pie'>"
-        f"<a href='{GITHUB_URL}'>GitHub</a> · <a href='{README_URL}'>README</a> · "
-        "Tus datos no se guardan: se procesan en memoria y nada se escribe a disco "
-        "ni a bases de datos.</div>")
-
-if df is None:
-    st.html("<div class='ee-estado'><span>Listo</span><span>0 respuestas</span>"
-            "<span>0 preguntas</span><span>Esperando archivo</span></div>")
-else:
-    origen = str(archivo.name) if archivo is not None else "datos de ejemplo"
-    segmento = (f" · segmento {f_col_f}={f_val_f}"
-                if f_col_f not in (None, "(sin filtro)") and f_val_f != "Todos" else "")
-    st.html(f"<div class='ee-estado'><span>Listo</span><span>{len(df)} respuestas</span>"
-            f"<span>{len(analizables)} preguntas</span><span>{_esc(origen)}{_esc(segmento)}</span></div>")
+    st.html("<div class='ee-pie'>"
+            f"<a href='{GITHUB_URL}'>GitHub</a> · <a href='{README_URL}'>README</a> · "
+            "Tus datos no se guardan: se procesan en memoria y nada se escribe a disco "
+            "ni a bases de datos.</div>")
