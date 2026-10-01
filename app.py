@@ -3,6 +3,7 @@ import io
 import re
 import zipfile
 from datetime import date
+from html import escape as _esc
 from pathlib import Path
 import streamlit as st
 import pandas as pd
@@ -42,36 +43,32 @@ def slug_de(col: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", col.lower()).strip("_")[:40] or "pregunta"
 
 
-def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False):
-    """Aspecto de hoja de cálculo: cuadrícula fina, cabecera suave en negrita,
-    números a la derecha, % con un decimal, Total resaltado y cebra sutil."""
-    num_cols = list(tabla.select_dtypes(include="number").columns)
-    pct_cols = [c for c in tabla.columns if str(c).lower().startswith("pct")]
-    est = tabla.style
-    if not mostrar_indice:
-        est = est.hide(axis="index")
-    if num_cols:
-        est = est.set_properties(subset=num_cols, **{"text-align": "right"})
-    if pct_cols:
-        est = est.format({c: "{:.1f}%" for c in pct_cols})
-    est = est.set_table_styles([
-        {"selector": "th", "props": [("background-color", "#E6EFE7"),
-                                    ("color", "#212529"), ("font-weight", "bold"),
-                                    ("border", "1px solid #DEE2E6"),
-                                    ("padding", "4px 8px")]},
-        {"selector": "td", "props": [("border", "1px solid #DEE2E6"),
-                                    ("padding", "4px 8px")]},
-        {"selector": "tbody tr:nth-child(even)",
-         "props": [("background-color", "#F8FAF8")]},
-    ])
-
-    def _total(fila):
-        marca = "background-color: #D9EAD3; font-weight: bold" if fila.name == "Total" else ""
-        return [marca] * len(fila)
-
-    if "Total" in tabla.index:
-        est = est.apply(_total, axis=1)
-    return est
+def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False) -> str:
+    """Tabla como HTML propio .ee-hoja: cuadricula fina, cabecera gris en
+    negrita, numeros a la derecha, % con un decimal y Total resaltado."""
+    num_cols = set(tabla.select_dtypes(include="number").columns)
+    h = ["<table class='ee-hoja'><thead><tr>"]
+    if mostrar_indice:
+        h.append("<th></th>")
+    h += [f"<th>{_esc(str(c))}</th>" for c in tabla.columns]
+    h.append("</tr></thead><tbody>")
+    for idx, fila in tabla.iterrows():
+        cls = " class='ee-total'" if idx == "Total" else ""
+        h.append(f"<tr{cls}>")
+        if mostrar_indice:
+            h.append(f"<th>{_esc(str(idx))}</th>")
+        for c in tabla.columns:
+            v = fila[c]
+            if pd.isna(v):
+                h.append("<td>—</td>")
+            elif str(c).lower().startswith("pct"):
+                h.append(f"<td class='num'>{float(v):.1f}%</td>")
+            elif c in num_cols:
+                h.append(f"<td class='num'>{_esc(str(v))}</td>")
+            else:
+                h.append(f"<td>{_esc(str(v))}</td>")
+        h.append("</tr>")
+    return "".join(h) + "</tbody></table>"
 
 
 def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
@@ -217,7 +214,7 @@ def mostrar_pregunta(num: int, col: str, tipo: str) -> None:
             dist = distribucion_escala(df[col])
             t1, t2 = st.columns([1, 1.2])
             with t1:
-                st.table(estilo_hoja(dist))
+                st.html(estilo_hoja(dist))
                 boton_csv(dist, "escala")
             with t2:
                 st.plotly_chart(barras_verticales(dist), width="stretch",
@@ -229,7 +226,7 @@ def mostrar_pregunta(num: int, col: str, tipo: str) -> None:
                        f"n total: {tabla.attrs['n_total']} · % sobre respondientes")
             t1, t2 = st.columns([1, 1.2])
             with t1:
-                st.table(estilo_hoja(tabla))
+                st.html(estilo_hoja(tabla))
                 boton_csv(tabla, "multiple")
             with t2:
                 st.plotly_chart(
@@ -240,7 +237,7 @@ def mostrar_pregunta(num: int, col: str, tipo: str) -> None:
         tabla = tabla_frecuencias(df[col])
         t1, t2 = st.columns([1, 1.2])
         with t1:
-            st.table(estilo_hoja(tabla))
+            st.html(estilo_hoja(tabla))
             boton_csv(tabla, "frecuencias")
         with t2:
             st.plotly_chart(barras_horizontales(tabla), width="stretch",
@@ -273,7 +270,7 @@ with tab_resumen:
         st.info("Muestra pequeña (n<30): el chi-cuadrado casi nunca será aplicable; "
                 "los cruces se leen como descriptivos.")
     with st.expander("Perfil de la muestra"):
-        st.table(estilo_hoja(pd.DataFrame(
+        st.html(estilo_hoja(pd.DataFrame(
             {"pregunta": list(perfil["n_valido_por_columna"].keys()),
              "n_válido": list(perfil["n_valido_por_columna"].values())})))
     with st.expander("Ver datos"):
@@ -296,10 +293,10 @@ with tab_cruces:
             r = cruce_cat_cat(df[f_col], df[c_col], base=base_cruce)
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.table(estilo_hoja(r["n"], mostrar_indice=True))
+            st.html(estilo_hoja(r["n"], mostrar_indice=True))
             st.download_button("Descargar CSV (n)", tabla_a_csv(r["n"].reset_index()),
                                "cruce_n.csv", "text/csv", key="csv_cruce_n")
-            st.table(estilo_hoja(r["pct"], mostrar_indice=True))
+            st.html(estilo_hoja(r["pct"], mostrar_indice=True))
             st.download_button("Descargar CSV (%)", tabla_a_csv(r["pct"].reset_index()),
                                "cruce_pct.csv", "text/csv", key="csv_cruce_pct")
             totales_fila = r["n"].drop(index="Total", errors="ignore")["Total"]
@@ -329,7 +326,7 @@ with tab_cruces:
                              f"p={t['p']} · V de Cramér={t['v_cramer']} · α={t['alfa']}")
                     st.success(t["veredicto"])
                     with st.expander("Frecuencias esperadas"):
-                        st.table(estilo_hoja(t["esperadas"], mostrar_indice=True))
+                        st.html(estilo_hoja(t["esperadas"], mostrar_indice=True))
         elif ((tipos_final[f_col], tipos_final[c_col]).count("escala") == 1
                 and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
             col_esc = f_col if tipos_final[f_col] == "escala" else c_col
@@ -337,7 +334,7 @@ with tab_cruces:
             r = cruce_escala_cat(df[col_esc], df[col_cat])
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.table(estilo_hoja(r["tabla"]))
+            st.html(estilo_hoja(r["tabla"]))
             st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
                                "cruce_medias.csv", "text/csv", key="csv_cruce_medias")
             if (r["tabla"]["n"] < 5).any():
@@ -352,7 +349,7 @@ with tab_cruces:
             st.info("% sobre respondientes de cada grupo. Solo descriptivo, sin test (S5).")
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.table(estilo_hoja(r["tabla"]))
+            st.html(estilo_hoja(r["tabla"]))
             st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
                                "cruce_multiple.csv", "text/csv", key="csv_cruce_mul")
             ancho = r["tabla"].pivot(index="grupo", columns="opcion", values="pct")
