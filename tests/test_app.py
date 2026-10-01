@@ -18,4 +18,4 @@ def test_app_vacia_muestra_pasos_sin_errores():
     at.run(timeout=90)
     assert not at.exception, at.exception
     assert at.tabs == []
-    assert any("3 pasos" in str(m.value) for m in at.markdown)
+    assert any("3 pasos" in str(h.value) for h in at.get("html"))
