@@ -1,81 +1,129 @@
-/* EncuestaExpress: un unico bloque CSS con clases propias (.ee-*).
+/* EncuestaExpress: paleta unica (una sola vez) + clases propias (.ee-*).
+   Papel #F7FAF3 | lineas #D3E0D0 | gutter #EAF1E6 | tinta #12261C
+   secundario #5B7164 | oscuro #0B4A2E | accion #14A05B | suave #DDF3E5
+   amarillo #FFD23F | coral #FF6F59 | azul #3A6FE8.
+   Los rgba() son solo esas mismas tintas con transparencia, no colores nuevos.
    No usa selectores internos de Streamlit, salvo los marcados FRÁGIL
-   (pueden romperse al actualizar Streamlit; si fallan, la app sigue
-   funcionando, solo pierde ese efecto). */
-.ee-kicker {
-  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: #1E7E34; margin-bottom: 0;
+   (si fallan tras actualizar, la app sigue funcionando). */
+:root {
+  --papel: #F7FAF3; --linea: #D3E0D0; --gutter: #EAF1E6;
+  --tinta: #12261C; --sec: #5B7164;
+  --oscuro: #0B4A2E; --accion: #14A05B; --suave: #DDF3E5;
+  --amarillo: #FFD23F; --coral: #FF6F59; --azul: #3A6FE8;
 }
-.ee-brand {
-  font-size: 2.4rem; font-weight: 800; color: #212529;
-  letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0;
-  border-bottom: 3px solid #1E7E34; display: inline-block;
-  padding-bottom: 0.15rem;
-}
-.ee-tagline { color: #6C757D; font-size: 1.0rem; margin-top: 0.4rem; margin-bottom: 1rem; }
 
-/* --- Marco decorativo de hoja (sutil; oculto bajo 768 px) --- */
+/* --- Franja superior --- */
+.ee-topbar {
+  background: var(--oscuro); border-radius: 10px;
+  padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.ee-logo {
+  width: 34px; height: 34px; border-radius: 8px; background: var(--accion);
+  color: #FFFFFF; font-weight: 800; font-size: 20px;
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+}
+.ee-nombre { color: var(--papel); font-weight: 800; font-size: 1.15rem; }
+.ee-lema { color: var(--linea); font-size: 0.9rem; }
+
+/* --- Barra de formulas (monoespaciada) --- */
+.ee-fxbar {
+  background: var(--oscuro); border: 1px solid rgba(211, 224, 208, 0.25);
+  border-radius: 8px; padding: 6px 12px; margin-bottom: 8px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 0.9rem;
+  color: var(--papel); display: flex; gap: 12px; align-items: center;
+}
+.ee-fxbar .ee-a1 { color: var(--linea); }
+.ee-fxbar .ee-fx {
+  font-weight: 700; color: var(--accion); background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px; padding: 0 0.4rem;
+}
+
+/* --- Marco decorativo (sutil; oculto bajo 768 px) --- */
 .ee-marco-cols {
   position: sticky; top: 0; z-index: 5; display: flex;
-  background: #FFFFFF; border-bottom: 1px solid #E9ECEF;
+  background: transparent; border-bottom: 1px solid rgba(211, 224, 208, 0.25);
 }
 .ee-marco-cols span {
   flex: 1; text-align: center; font-size: 11px; font-weight: 600;
-  color: #CED4DA; padding: 2px 0;
+  color: rgba(211, 224, 208, 0.5); padding: 2px 0;
 }
 .ee-marco-filas {
   position: fixed; left: 0; top: 0; bottom: 0; width: 30px; z-index: 4;
-  background: #FFFFFF; border-right: 1px solid #E9ECEF;
-  display: flex; flex-direction: column; padding-top: 140px;
+  display: flex; flex-direction: column; padding-top: 220px;
 }
-.ee-marco-filas span { text-align: center; font-size: 10px; color: #E2E6EA; height: 24px; }
+.ee-marco-filas span { text-align: center; font-size: 10px; color: rgba(211, 224, 208, 0.35); height: 24px; }
 @media (max-width: 768px) {
   .ee-marco-cols, .ee-marco-filas { display: none; }
 }
 
-/* --- Pantalla de inicio estilo hoja --- */
-.ee-inicio {
-  background-image:
-    linear-gradient(#EDF1ED 1px, transparent 1px),
-    linear-gradient(90deg, #EDF1ED 1px, transparent 1px);
-  background-size: 28px 28px;
-  border: 1px solid #DEE2E6; border-radius: 10px;
-  padding: 32px 16px; text-align: center;
+/* --- Hero (celda seleccionada) --- */
+.ee-hero {
+  background: var(--tinta); border: 2px solid var(--accion);
+  border-radius: 12px; padding: 40px 36px; position: relative; margin: 12px 0;
 }
-.ee-celda {
-  display: inline-block; border: 2px solid #1E7E34; border-radius: 8px;
-  background: #FFFFFF; padding: 16px 28px; font-weight: 700; color: #1E7E34;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); margin-bottom: 12px;
+.ee-hero::after {
+  content: ""; position: absolute; right: -7px; bottom: -7px;
+  width: 12px; height: 12px; background: var(--accion); border-radius: 2px;
 }
+.ee-hero h1 { color: var(--papel); font-size: 2.6rem; font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 12px 0; }
+.ee-hero h1 mark { background: var(--amarillo); color: var(--tinta); padding: 0 0.15em; }
+.ee-hero p { color: var(--linea); font-size: 1.05rem; max-width: 34em; }
+.ee-btn-principal {
+  display: inline-block; background: var(--accion); color: #FFFFFF !important;
+  font-weight: 700; border: 2px solid var(--oscuro); border-radius: 8px;
+  padding: 10px 22px; box-shadow: 5px 5px 0 var(--amarillo); text-decoration: none;
+}
+.ee-btn-secundario {
+  display: inline-block; background: #FFFFFF; color: var(--tinta) !important;
+  font-weight: 700; border: 2px solid var(--tinta); border-radius: 8px;
+  padding: 10px 22px; text-decoration: none; margin-left: 12px;
+}
+.ee-drop {
+  border: 2px dashed var(--accion); background: rgba(20, 160, 91, 0.12);
+  border-radius: 10px; padding: 18px; margin-top: 20px; color: var(--papel);
+}
+
+/* --- Pasos --- */
+.ee-pasos { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+.ee-paso {
+  flex: 1; min-width: 180px; border: 1px solid rgba(211, 224, 208, 0.3);
+  border-radius: 8px; padding: 14px 16px; background: rgba(0, 0, 0, 0.15);
+}
+.ee-paso b { color: var(--papel); display: block; margin-bottom: 4px; }
+.ee-paso span { color: var(--linea); font-size: 0.9rem; }
 
 /* --- Tablas propias .ee-hoja --- */
-table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: #FFFFFF; }
+table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
 .ee-hoja th {
-  background: #EDF0ED; color: #212529; font-weight: 700;
-  border: 1px solid #C9D2C9; padding: 5px 10px; text-align: left;
+  background: var(--oscuro); color: var(--papel); font-weight: 700;
+  border: 1px solid rgba(211, 224, 208, 0.25); padding: 5px 10px; text-align: left;
 }
-.ee-hoja td { border: 1px solid #DEE2E6; padding: 5px 10px; }
+.ee-hoja td {
+  border: 1px solid rgba(211, 224, 208, 0.2); padding: 5px 10px; color: var(--papel);
+}
 .ee-hoja td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.ee-hoja tr.ee-total td { background: #D9EAD3; font-weight: 700; }
-.ee-hoja tbody tr:nth-child(even):not(.ee-total) td { background: #F8FAF8; }
+.ee-hoja tr.ee-total td { background: var(--oscuro); font-weight: 700; }
+.ee-hoja tbody tr:nth-child(even):not(.ee-total) td { background: rgba(255, 255, 255, 0.03); }
+.ee-reparto { height: 10px; border-radius: 3px; min-width: 2px; }
 
-/* --- Barra de fórmulas por pregunta --- */
+/* --- Barra de formulas por pregunta --- */
 .ee-formula {
-  background: #F1F3F5; border: 1px solid #DEE2E6; border-left: 4px solid #1E7E34;
+  background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(211, 224, 208, 0.25);
+  border-left: 4px solid var(--accion);
   border-radius: 6px; padding: 0.45rem 0.8rem; font-size: 0.95rem; margin: 0.6rem 0;
+  font-family: ui-monospace, Consolas, monospace; color: var(--papel);
 }
-.ee-fx {
-  font-family: ui-monospace, Consolas, monospace; font-weight: 700; color: #1E7E34;
-  background: #FFFFFF; border: 1px solid #DEE2E6; border-radius: 4px;
-  padding: 0 0.4rem; margin-right: 0.5rem;
+.ee-formula .ee-fx {
+  font-weight: 700; color: var(--accion); margin-right: 0.5rem;
 }
 
 /* --- Barra de estado inferior --- */
 .ee-estado {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
-  background: #FFFFFF; border-top: 1px solid #DEE2E6;
-  font-size: 12px; color: #495057; padding: 4px 12px;
-  display: flex; gap: 16px;
+  background: var(--oscuro); color: var(--papel);
+  font-size: 12px; padding: 5px 12px; display: flex; gap: 16px;
 }
 
 /* FRÁGIL: oculta cabecera/pie de Streamlit (selectores internos). */
@@ -85,12 +133,15 @@ table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; back
 
 /* FRÁGIL: pestañas estilo hojas (selectores internos baseweb). */
 [data-baseweb="tab-list"] {
-  gap: 4px; background: #F1F3F5; padding: 6px 6px 0 6px; border-radius: 8px 8px 0 0;
+  gap: 4px; background: rgba(0, 0, 0, 0.25); padding: 6px 6px 0 6px;
+  border-radius: 8px 8px 0 0;
 }
-[data-baseweb="tab"] { background: #E9ECEF; border-radius: 6px 6px 0 0; color: #495057; }
+[data-baseweb="tab"] {
+  background: var(--gutter); border-radius: 6px 6px 0 0; color: var(--sec);
+}
 [data-baseweb="tab"][aria-selected="true"] {
-  background: #FFFFFF; color: #212529; border-bottom: 3px solid #1E7E34;
+  background: var(--papel); color: var(--tinta); border-bottom: 3px solid var(--accion);
 }
 
 /* FRÁGIL: aire inferior para que la barra de estado no tape contenido. */
-[data-testid="stAppViewContainer"] { padding-bottom: 32px; }
+[data-testid="stAppViewContainer"] { padding-bottom: 36px; }

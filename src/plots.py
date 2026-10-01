@@ -3,13 +3,13 @@ from __future__ import annotations
 import pandas as pd
 import plotly.express as px
 
-# Paleta unica de la app (ver .streamlit/config.toml): gama verde hoja de calculo.
+# Paleta unica de la app (ver assets/estilos.css): series verde, azul, coral, amarillo.
 PALETA = {
-    "acento": "#1E7E34",
-    "gama": ["#1E7E34", "#2FA84F", "#5CB85C", "#8CCB8C", "#B9DFBB", "#DFF0E1"],
-    "rejilla": "#E5E7EB",
-    "texto": "#212529",
-    "fondo": "#FFFFFF",
+    "acento": "#14A05B",
+    "gama": ["#14A05B", "#3A6FE8", "#FF6F59", "#FFD23F"],
+    "rejilla": "rgba(211, 224, 208, 0.18)",
+    "texto": "#F7FAF3",
+    "fondo": "#12261C",
 }
 ALTURA = 360
 
