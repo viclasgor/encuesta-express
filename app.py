@@ -39,7 +39,9 @@ st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
         "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
 st.html("<div class='ee-marco-cols' aria-hidden='true'><span>A</span><span>B</span>"
         "<span>C</span><span>D</span><span>E</span><span>F</span><span>G</span>"
-        "<span>H</span></div>")
+        "<span>H</span></div>"
+        "<div class='ee-marco-filas' aria-hidden='true'>" +
+        "".join(f"<span>{i}</span>" for i in range(1, 31)) + "</div>")
 
 
 def slug_de(col: str) -> str:

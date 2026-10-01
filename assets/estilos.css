@@ -51,8 +51,14 @@
   flex: 1; text-align: center; font-size: 11px; font-weight: 600;
   color: rgba(211, 224, 208, 0.5); padding: 2px 0;
 }
+/* Rail de filas: debe quedar congelado (fixed). Si scrollea, ver captura. */
+.ee-marco-filas {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 30px; z-index: 4;
+  display: flex; flex-direction: column; padding-top: 220px; pointer-events: none;
+}
+.ee-marco-filas span { text-align: center; font-size: 10px; color: rgba(211, 224, 208, 0.4); height: 24px; }
 @media (max-width: 768px) {
-  .ee-marco-cols { display: none; }
+  .ee-marco-cols, .ee-marco-filas { display: none; }
 }
 
 /* --- Hero (celda seleccionada) --- */
