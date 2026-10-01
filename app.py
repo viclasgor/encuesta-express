@@ -114,14 +114,7 @@ def numero_pregunta(df: pd.DataFrame, col: str) -> int:
     return list(df.columns).index(col) + 1  # P1, P2... en orden de columna
 
 
-# --- Carga (sidebar conserva opciones; la subida vive en el heroe) ---
-with st.sidebar:
-    st.header("Datos y opciones")
-    if st.session_state.get("usar_ejemplo"):
-        st.caption("Usando datos de ejemplo.")
-        if st.button("Dejar el ejemplo"):
-            st.session_state["usar_ejemplo"] = False
-            st.rerun()
+# --- Sin barra lateral: todo vive en la pagina ---
 
 archivo_heroe = None
 df, tipos_final, f_col_f, f_val_f = None, {}, None, "Todos"
@@ -188,7 +181,12 @@ analizables: list[str] = []
 perfil = {"n_total": 0, "n_valido_por_columna": {}}
 if df is not None:
     tipos_auto = detectar_tipos(df)
-    with st.sidebar:
+    with st.expander("⚙ Datos y opciones (filtro y tipos)", expanded=False):
+        if st.session_state.get("usar_ejemplo"):
+            st.caption("Usando datos de ejemplo.")
+            if st.button("Dejar el ejemplo"):
+                st.session_state["usar_ejemplo"] = False
+                st.rerun()
         st.subheader("Filtro por segmento")
         cat_filtro = [c for c in df.columns if tipos_auto[c] == "categorica"]
         if cat_filtro:
@@ -197,9 +195,6 @@ if df is not None:
                 f_val_f = st.selectbox("Valor", ["Todos"] + sorted(
                     {v.strip() for v in df[f_col_f].astype(str) if v.strip() != ""}),
                     key="filtro_val", help="Filtra todo el informe por este valor.")
-        st.subheader("Cruce categórico")
-        base_cruce = st.radio("% sobre", ["fila", "columna"], key="pct_base",
-                              help="Base de los porcentajes del cruce categórica×categórica.")
         with st.expander("Revisar tipos detectados"):
             st.caption("Corrige el tipo o ignora columnas (id, email, fecha...).")
             for col in df.columns:
@@ -326,6 +321,8 @@ with tab_cruces:
             f_col = st.selectbox("Filas", cruzables, key="cruce_filas")
             c_col = st.selectbox("Columnas", [c for c in cruzables if c != f_col],
                                  key="cruce_cols")
+            base_cruce = st.radio("% sobre", ["fila", "columna"], key="pct_base",
+                                  help="Base de los porcentajes del cruce categórica×categórica.")
             if tipos_final[f_col] == "categorica" and tipos_final[c_col] == "categorica":
                 r = cruce_cat_cat(df[f_col], df[c_col], base=base_cruce)
                 if r["excluidos"]:

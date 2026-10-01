@@ -78,3 +78,11 @@
 - **IA falló en / corregí:** faltaba la barra A1 y el Reparto en preview (visto en captura, añadido); markdown en `st.html` ya venía corregido de antes.
 - **Cómo lo detecté:** capturas headless comparadas con la maqueta; `pytest -q`; health 200.
 - **Decisión técnica mía:** botones y uploader nativos (sombra amarilla y diálogo programático exigen frágiles o son imposibles); rail tapado por sidebar; sidebar visible por funcionalidad; `st.html` en vez de `st.table`.
+
+---
+### 2026-10-01 — Fuera sidebar + página completa estilo maqueta
+- **Pedí (resumen):** quitar la sidebar inútil y acercar la web a la maqueta; anotarlo en PROMPT-LOG.
+- **IA hizo bien:** sidebar eliminada; filtro+tipos a desplegable global, `% fila/columna` a Cruces (donde se usa); página a ancho completo con rail de filas visible; 23 verdes + arranque + captura.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** reporte del usuario + captura headless comparada con la maqueta.
+- **Decisión técnica mía:** el `% del cruce` vive ahora en su pestaña (más claro que global).
