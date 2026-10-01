@@ -25,6 +25,29 @@
 }
 .ee-nombre { color: var(--papel); font-weight: 800; font-size: 1.15rem; }
 .ee-lema { color: var(--linea); font-size: 0.9rem; }
+.ee-archivo {
+  margin-left: auto; color: var(--linea); font-size: 0.85rem;
+  font-family: ui-monospace, Consolas, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- Estado superior (punto + texto, a la derecha de la toolbar) --- */
+.ee-estado-top { display: flex; align-items: center; justify-content: flex-end;
+  gap: 8px; color: var(--papel); font-size: 0.9rem; padding-top: 8px; }
+.ee-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sec); flex: none; }
+.ee-dot.ee-ok { background: var(--accion); }
+
+/* --- Pie: estadísticas, enlaces y privacidad --- */
+.ee-pie { color: var(--sec); font-size: 0.8rem; margin: 18px 0 8px 0; }
+.ee-pie a { color: var(--linea); }
+
+/* --- Simplificación bajo 768 px: solo título y fórmulas; pie básico.
+   (Los widgets nativos no se pueden ocultar selectivamente sin frágiles.) --- */
+@media (max-width: 768px) {
+  .ee-lema, .ee-archivo { display: none; }
+  .ee-marco-cols { display: none; }
+  .ee-estado span:nth-child(n+3) { display: none; }
+}
 
 /* --- Barra de formulas (monoespaciada) --- */
 .ee-fxbar {
