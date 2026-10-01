@@ -136,3 +136,7 @@
 - **Cómo lo detecté:** `py_compile`/lectura; clics reales (ejemplo, descarga `informe.html`, tipos, Ayuda); capturas 1280/390.
 - **Decisión técnica mía:** menús como acciones (cambiar de pestaña por código no existe en 1.64); "Subir" resetea al héroe (el diálogo no se puede abrir); lectura de estado antes de dibujar para cabecera sin retardo.
 - **No verificado:** pantalla real del usuario ni Cloud con esto.
+
+---
+### 2026-10-01 — Header/footer: remates (contraste gutter, enteros)
+- **Seguimiento de la entrada anterior:** la cebra pisaba el fondo del gutter (ilegible) y la escala mostraba `2.0`; ambos detectados en captura 390, corregidos en CSS/formateo y verificados por DOM (`getComputedStyle`) y captura; 23 verdes.
