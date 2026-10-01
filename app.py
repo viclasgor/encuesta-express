@@ -31,17 +31,12 @@ st.set_page_config(page_title="EncuestaExpress", layout="wide",
 _css = (Path(__file__).parent / "assets" / "estilos.css").read_text(encoding="utf-8")
 st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
 
-# --- Franja superior + barra de formulas + marco (decorativo) ---
+# --- Franja superior + barra de formulas ---
 st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
         "<span class='ee-nombre'>EncuestaExpress</span>"
         "<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span></div>")
 st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
         "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
-st.html("<div class='ee-marco-cols' aria-hidden='true'><span>A</span><span>B</span>"
-        "<span>C</span><span>D</span><span>E</span><span>F</span><span>G</span>"
-        "<span>H</span></div>"
-        "<div class='ee-marco-filas' aria-hidden='true'>" +
-        "".join(f"<span>{i}</span>" for i in range(1, 31)) + "</div>")
 
 
 def slug_de(col: str) -> str:
@@ -53,7 +48,14 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
     """Tabla como HTML propio .ee-hoja: cuadricula, cabecera, numeros a la
     derecha, % con coma decimal, Total resaltado y columna Reparto opcional."""
     num_cols = set(tabla.select_dtypes(include="number").columns)
-    h = ["<table class='ee-hoja'><thead><tr>"]
+    ncols = len(tabla.columns) + (1 if mostrar_indice else 0) + (1 if reparto else 0)
+    letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    h = ["<div class='ee-hoja-wrap'><table class='ee-hoja'><thead>"]
+    h.append("<tr class='ee-col'><th class='ee-rn'></th>"
+             + "".join(f"<th>{letras[j % 26]}</th>" for j in range(ncols - 1))
+             + "</tr>")
+    h.append("<tr>")
+    h.append("<th class='ee-rn'></th>")
     if mostrar_indice:
         h.append("<th></th>")
     h += [f"<th>{_esc(str(c))}</th>" for c in tabla.columns]
@@ -68,6 +70,7 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
     for i, (idx, fila) in enumerate(tabla.iterrows()):
         cls = " class='ee-total'" if idx == "Total" else ""
         h.append(f"<tr{cls}>")
+        h.append(f"<td class='ee-rn'>{i + 1}</td>")
         if mostrar_indice:
             h.append(f"<th>{_esc(str(idx))}</th>")
         for c in tabla.columns:
@@ -90,7 +93,7 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
                 h.append(f"<td><div class='ee-reparto' style='width:{ancho:.1f}%;"
                          f"background:{color}'></div></td>")
         h.append("</tr>")
-    return "".join(h) + "</tbody></table>"
+    return "".join(h) + "</tbody></table></div>"
 
 
 def con_total(tabla: pd.DataFrame) -> pd.DataFrame:
