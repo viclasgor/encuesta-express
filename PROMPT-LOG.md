@@ -62,3 +62,11 @@
 - **IA falló en / corregí:** nada.
 - **Cómo lo detecté:** `pytest -q` (render AppTest con ejemplo y vacío); health 200.
 - **Decisión técnica mía:** datos brutos en `st.dataframe` (ese widget ignora bordes; los Styler con cuadrícula solo se ven fieles en `st.table`); índice oculto salvo grupos reales.
+
+---
+### 2026-10-01 — Rediseño hoja completo (rama diseno-hoja) + capturas Playwright
+- **Pedí (resumen):** estética hoja genérica en 1 segundo, sin marcas MS, sin tocar `src/` ni deps; diseño previo en 10 líneas; marco sutil oculto <768px; tablas como HTML propio `.ee-hoja` (no Styler); Playwright solo dev en `requirements-dev.txt`; capturas de inicio e informe; Streamlit fijado; frágiles comentados.
+- **IA hizo bien:** 5 commits pequeños (marco, inicio, estado, tablas, barras+inicio); marco A–H + rail, `toolbarMode minimal`, tabs hoja, barra de estado real, barra `fx Pn`; `requirements-dev.txt` con `playwright==1.63.0` (nunca en `requirements.txt`); Streamlit ya fijado en `1.64.0`; 23 verdes.
+- **IA falló en / corregí:** 1) barras azules: `colorway` no se impone a trazas ya creadas por `px` → `marker_color`/`color_discrete_sequence` explícitos (lo vi en captura). 2) markdown dentro de `st.html` se veía literal (`###`, `**`) → etiquetas HTML (lo vi en captura). 3) captura inicial en blanco por arranque lento → espera explícita al botón. 4) servidor huérfano ocupando el puerto falseó una tanda de capturas → limpieza de procesos y repetición.
+- **Cómo lo detecté:** capturas headless reales (inicio, resumen, informe) vistas por mí; `pytest -q`; health 200.
+- **Decisión técnica mía:** `st.html` (existe en 1.64); fuente DejaVu de matplotlib solo para extraer la TTF (no es dependencia); selectores frágiles marcados FRÁGIL en el CSS.
