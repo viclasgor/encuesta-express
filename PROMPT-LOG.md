@@ -70,3 +70,11 @@
 - **IA falló en / corregí:** 1) barras azules: `colorway` no se impone a trazas ya creadas por `px` → `marker_color`/`color_discrete_sequence` explícitos (lo vi en captura). 2) markdown dentro de `st.html` se veía literal (`###`, `**`) → etiquetas HTML (lo vi en captura). 3) captura inicial en blanco por arranque lento → espera explícita al botón. 4) servidor huérfano ocupando el puerto falseó una tanda de capturas → limpieza de procesos y repetición.
 - **Cómo lo detecté:** capturas headless reales (inicio, resumen, informe) vistas por mí; `pytest -q`; health 200.
 - **Decisión técnica mía:** `st.html` (existe en 1.64); fuente DejaVu de matplotlib solo para extraer la TTF (no es dependencia); selectores frágiles marcados FRÁGIL en el CSS.
+
+---
+### 2026-10-01 — Rediseño según maqueta (rama diseno-hoja) + capturas Playwright
+- **Pedí (resumen):** clonar maqueta solo visual, sin `src/` ni deps, en `diseno-hoja`; paleta dada una vez; franja+logo, fxbar A1, marco sutil <768px, héroe celda, preview P3 con Reparto, pasos, tabs Inicio, estado verde; CSS `.ee-*`; botones con alternativa si piden frágiles; Streamlit fijado; capturas y diferencias; tests verdes, commits pequeños.
+- **IA hizo bien:** 3 commits (tema+CSS, héroe+preview+tabs+Reparto, barra A1); `.ee-hoja` oscura con coma decimal y Reparto en orden verde-azul-coral-amarillo; `PALETA` reutilizada en plots; `requirements-dev.txt` intacto; Streamlit ya en `1.64.0`; 23 verdes; capturas inicio+informe.
+- **IA falló en / corregí:** faltaba la barra A1 y el Reparto en preview (visto en captura, añadido); markdown en `st.html` ya venía corregido de antes.
+- **Cómo lo detecté:** capturas headless comparadas con la maqueta; `pytest -q`; health 200.
+- **Decisión técnica mía:** botones y uploader nativos (sombra amarilla y diálogo programático exigen frágiles o son imposibles); rail tapado por sidebar; sidebar visible por funcionalidad; `st.html` en vez de `st.table`.
