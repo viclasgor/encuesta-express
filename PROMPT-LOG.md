@@ -104,6 +104,15 @@
 - **Decisión técnica mía:** si en tu pantalla se sigue moviendo, es caché o deploy sin actualizar (Ctrl+F5 tras el push).
 
 ---
+### 2026-10-01 — Cuadrícula de fondo en el contenedor de scroll (opción B)
+- **Pedí (resumen):** efecto `.canvas` de la maqueta (no existe en el repo): celdas finas detrás de todo, tarjetas blancas encima; antes diagnosticar DOM (contenedor scroll, capas sólidas, por qué no se veía); arreglo con grid en scroll container, `local`, 34px/12,5%, `#D3E0D0` sobre `#F7FAF3`; transparentar intermedias; tarjetas blancas; CSS un archivo; capturas 1280/390 con scroll; tests + commit; elegí opción B (mantener oscuro).
+- **IA hizo bien:** diagnóstico real (scroll=`[data-testid="stMain"]`, sólidos en `body`+`.stApp`); grid adaptado al oscuro (líneas `#D3E0D0` al 12% sobre el verde, tarjetas oscuras sólidas); selector frágil comentado; 23 verdes.
+- **IA falló en / corregí:** el fallo anterior era mío (grid en `body`, enterrado bajo `.stApp`); nada nuevo esta vez.
+- **Cómo lo detecté:** `pg.evaluate` del DOM; 6 capturas (1280/768/390, inicio e informe abajo): grid visible en huecos, legible, sin solapes, se mueve con el contenido.
+- **Decisión técnica mía:** sin transparentar nada (las intermedias ya eran transparentes); `maqueta.html` no existe: trabajé con tu descripción + capturas previas.
+- **No verificado:** pantalla real del usuario ni Cloud con este cambio.
+
+---
 ### 2026-10-01 — Regla PROMPT-LOG automático (AGENTS.md)
 - **Pedí (resumen):** cada cambio quede en PROMPT-LOG sin pedirlo, antes del commit; añadir la regla a AGENTS.md.
 - **IA hizo bien:** regla 7 reescrita (registro por tarea, antes del commit, con errores y detección); aplicada a esta misma tarea.

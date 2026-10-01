@@ -39,8 +39,17 @@
   border-radius: 4px; padding: 0 0.4rem;
 }
 
-/* Sin cuadrícula de fondo: se probó en body pero Streamlit pinta su propio
-   fondo encima y no se ve. La cuadrícula vive en .ee-inicio y en las tablas. */
+/* Cuadrícula de fondo sobre el verde actual (opción B): solo se ve en los
+   huecos; tarjetas y tablas llevan su fondo sólido.attachment:local => se
+   desplaza con el contenido, nunca fija. */
+/* FRÁGIL: [data-testid="stMain"] es el contenedor con scroll de Streamlit. */
+[data-testid="stMain"] {
+  background-image:
+    linear-gradient(rgba(211, 224, 208, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(211, 224, 208, 0.12) 1px, transparent 1px);
+  background-size: 12.5% 34px;
+  background-attachment: local;
+}
 
 /* --- Hero (celda seleccionada) --- */
 .ee-hero {
