@@ -130,12 +130,12 @@
 table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
 .ee-hoja th.ee-rn, .ee-hoja td.ee-rn {
   width: 44px; min-width: 44px; max-width: 44px;
-  background: var(--gutter); color: var(--sec);
+  background: var(--gutter); color: #33503F;
   font-size: 0.75rem; text-align: center; font-weight: 600;
   border-right: 2px solid rgba(18, 38, 28, 0.35);
 }
 .ee-hoja tr.ee-col th {
-  background: var(--gutter); color: var(--sec);
+  background: var(--gutter); color: #33503F;
   font-size: 0.7rem; font-weight: 600; text-align: center;
   border: 1px solid rgba(18, 38, 28, 0.25); padding: 2px 4px;
 }
@@ -148,7 +148,8 @@ table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
 }
 .ee-hoja td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ee-hoja tr.ee-total td { background: var(--oscuro); font-weight: 700; }
-.ee-hoja tbody tr:nth-child(even):not(.ee-total) td { background: rgba(255, 255, 255, 0.03); }
+.ee-hoja tr.ee-total td.ee-rn { color: var(--papel); }
+.ee-hoja tbody tr:nth-child(even):not(.ee-total) td:not(.ee-rn) { background: rgba(255, 255, 255, 0.03); }
 .ee-reparto { height: 10px; border-radius: 3px; min-width: 2px; }
 
 /* --- Barra de formulas por pregunta --- */
