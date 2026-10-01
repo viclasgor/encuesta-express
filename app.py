@@ -27,6 +27,11 @@ st.set_page_config(page_title="EncuestaExpress", layout="wide",
 
 _css = (Path(__file__).parent / "assets" / "estilos.css").read_text(encoding="utf-8")
 st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
+st.html("<div class='ee-marco-cols' aria-hidden='true'><span>A</span><span>B</span>"
+        "<span>C</span><span>D</span><span>E</span><span>F</span><span>G</span>"
+        "<span>H</span></div>"
+        "<div class='ee-marco-filas' aria-hidden='true'>" +
+        "".join(f"<span>{i}</span>" for i in range(1, 31)) + "</div>")
 st.markdown("<div class='ee-kicker'>Informe de encuestas</div>", unsafe_allow_html=True)
 st.markdown("<div class='ee-brand'>EncuestaExpress</div>", unsafe_allow_html=True)
 st.markdown("<div class='ee-tagline'>Del CSV de tu encuesta al informe en minutos.</div>",

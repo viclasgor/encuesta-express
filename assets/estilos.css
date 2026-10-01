@@ -1,5 +1,7 @@
 /* EncuestaExpress: un unico bloque CSS con clases propias (.ee-*).
-   No usa selectores internos de Streamlit. */
+   No usa selectores internos de Streamlit, salvo los marcados FRÁGIL
+   (pueden romperse al actualizar Streamlit; si fallan, la app sigue
+   funcionando, solo pierde ese efecto). */
 .ee-kicker {
   font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em;
   text-transform: uppercase; color: #1E7E34; margin-bottom: 0;
@@ -11,6 +13,53 @@
   padding-bottom: 0.15rem;
 }
 .ee-tagline { color: #6C757D; font-size: 1.0rem; margin-top: 0.4rem; margin-bottom: 1rem; }
+
+/* --- Marco decorativo de hoja (sutil; oculto bajo 768 px) --- */
+.ee-marco-cols {
+  position: sticky; top: 0; z-index: 5; display: flex;
+  background: #FFFFFF; border-bottom: 1px solid #E9ECEF;
+}
+.ee-marco-cols span {
+  flex: 1; text-align: center; font-size: 11px; font-weight: 600;
+  color: #CED4DA; padding: 2px 0;
+}
+.ee-marco-filas {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 30px; z-index: 4;
+  background: #FFFFFF; border-right: 1px solid #E9ECEF;
+  display: flex; flex-direction: column; padding-top: 140px;
+}
+.ee-marco-filas span { text-align: center; font-size: 10px; color: #E2E6EA; height: 24px; }
+@media (max-width: 768px) {
+  .ee-marco-cols, .ee-marco-filas { display: none; }
+}
+
+/* --- Pantalla de inicio estilo hoja --- */
+.ee-inicio {
+  background-image:
+    linear-gradient(#EDF1ED 1px, transparent 1px),
+    linear-gradient(90deg, #EDF1ED 1px, transparent 1px);
+  background-size: 28px 28px;
+  border: 1px solid #DEE2E6; border-radius: 10px;
+  padding: 32px 16px; text-align: center;
+}
+.ee-celda {
+  display: inline-block; border: 2px solid #1E7E34; border-radius: 8px;
+  background: #FFFFFF; padding: 16px 28px; font-weight: 700; color: #1E7E34;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); margin-bottom: 12px;
+}
+
+/* --- Tablas propias .ee-hoja --- */
+table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: #FFFFFF; }
+.ee-hoja th {
+  background: #EDF0ED; color: #212529; font-weight: 700;
+  border: 1px solid #C9D2C9; padding: 5px 10px; text-align: left;
+}
+.ee-hoja td { border: 1px solid #DEE2E6; padding: 5px 10px; }
+.ee-hoja td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.ee-hoja tr.ee-total td { background: #D9EAD3; font-weight: 700; }
+.ee-hoja tbody tr:nth-child(even):not(.ee-total) td { background: #F8FAF8; }
+
+/* --- Barra de fórmulas por pregunta --- */
 .ee-formula {
   background: #F1F3F5; border: 1px solid #DEE2E6; border-left: 4px solid #1E7E34;
   border-radius: 6px; padding: 0.45rem 0.8rem; font-size: 0.95rem; margin: 0.6rem 0;
@@ -20,3 +69,28 @@
   background: #FFFFFF; border: 1px solid #DEE2E6; border-radius: 4px;
   padding: 0 0.4rem; margin-right: 0.5rem;
 }
+
+/* --- Barra de estado inferior --- */
+.ee-estado {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: #FFFFFF; border-top: 1px solid #DEE2E6;
+  font-size: 12px; color: #495057; padding: 4px 12px;
+  display: flex; gap: 16px;
+}
+
+/* FRÁGIL: oculta cabecera/pie de Streamlit (selectores internos). */
+[data-testid="stHeader"] { display: none; }
+[data-testid="stStatusWidget"] { display: none; }
+[data-testid="stToolbar"] { display: none; }
+
+/* FRÁGIL: pestañas estilo hojas (selectores internos baseweb). */
+[data-baseweb="tab-list"] {
+  gap: 4px; background: #F1F3F5; padding: 6px 6px 0 6px; border-radius: 8px 8px 0 0;
+}
+[data-baseweb="tab"] { background: #E9ECEF; border-radius: 6px 6px 0 0; color: #495057; }
+[data-baseweb="tab"][aria-selected="true"] {
+  background: #FFFFFF; color: #212529; border-bottom: 3px solid #1E7E34;
+}
+
+/* FRÁGIL: aire inferior para que la barra de estado no tape contenido. */
+[data-testid="stAppViewContainer"] { padding-bottom: 32px; }
