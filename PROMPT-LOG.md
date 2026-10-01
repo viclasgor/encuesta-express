@@ -102,3 +102,11 @@
 - **IA falló en / corregí:** mal diagnóstico previo (dije que Streamlit derrotaba el `fixed` sin probarlo) → rectificado con evidencia; el patrón de `edit` volvió a comerse líneas 2 veces → reparado con lectura previa.
 - **Cómo lo detecté:** capturas 05-arriba vs 06-abajo tras scroll de 2500px; `pytest -q`; health 200.
 - **Decisión técnica mía:** si en tu pantalla se sigue moviendo, es caché o deploy sin actualizar (Ctrl+F5 tras el push).
+
+---
+### 2026-10-01 — Regla PROMPT-LOG automático (AGENTS.md)
+- **Pedí (resumen):** cada cambio quede en PROMPT-LOG sin pedirlo, antes del commit; añadir la regla a AGENTS.md.
+- **IA hizo bien:** regla 7 reescrita (registro por tarea, antes del commit, con errores y detección); aplicada a esta misma tarea.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** cambio solo de docs; `git status` limpio salvo AGENTS.md y PROMPT-LOG.md.
+- **Decisión técnica mía:** ninguna.

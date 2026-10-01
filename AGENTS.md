@@ -45,7 +45,7 @@ pytest -q
 4. Si algo es ambiguo, pregunta en vez de suponer. Si es detalle menor que no cambia alcance/stack, elige lo más simple, anótalo como Supuesto en `docs/ALCANCE.md` y sigue.
 5. Tras cada cambio: ejecuta la app o los tests y dime qué has verificado y qué no.
 6. Explica decisiones técnicas en lenguaje sencillo (usuario principiante).
-7. Al final de cada sesión, propón la entrada para `PROMPT-LOG.md`, incluyendo errores cometidos.
+7. Al terminar cada tarea, registra la entrada en `PROMPT-LOG.md` sin que te lo pidan, ANTES del commit (fecha, qué se pidió, qué se hizo, errores y cómo se detectaron).
 8. Incluye `data/ejemplo_encuesta.csv` para la demo (usar el ejemplo aportado).
 9. No hardcodees secretos ni claves; no subas datos personales reales; ofrece ignorar columnas email.
 
