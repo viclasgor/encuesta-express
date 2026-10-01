@@ -138,5 +138,14 @@
 - **No verificado:** pantalla real del usuario ni Cloud con esto.
 
 ---
+### 2026-10-01 — PDF con gráficos dibujados (sin Kaleido)
+- **Pedí (resumen):** explicar el PDF actual en 5 líneas; dibujar barras con fpdf2 (H con n y %, V para escala, apiladas/agrupadas si caben o solo tabla); título+tabla+gráfico por pregunta sin cortes; portada; TTF del repo; sin Kaleido/navegador/matplotlib ni tocar cálculos; módulo separado + test; botón existente; Cloud sin binarios.
+- **IA hizo bien:** `src/pdf_report.py` (hbar/vbar/stacked con paleta, etiquetas truncadas, salto de página previo); `export_pdf` acepta `grafico`+`cruce`; botón genera el nuevo PDF; test con ejemplo (8 páginas, rects con los 4 colores verificados en streams); 24 verdes + arranque.
+- **IA falló en / corregí:** umbral de tamaño del test por 44 bytes → 15_000; búsqueda de color con decimales exactos → regex de fills.
+- **Cómo lo detecté:** `pytest -q`; descompresión de streams con `zlib` (4 `re f` con la gama); health 200.
+- **Decisión técnica mía / razón sin Kaleido:** Kaleido descarga un binario del sistema (inviable en Cloud); matplotlib sería dependencia nueva (pendiente de tu OK, no hizo falta).
+- **No verificado:** el aspecto visual fino del PDF (sin rasterizador disponible) ni Cloud con este cambio.
+
+---
 ### 2026-10-01 — Header/footer: remates (contraste gutter, enteros)
 - **Seguimiento de la entrada anterior:** la cebra pisaba el fondo del gutter (ilegible) y la escala mostraba `2.0`; ambos detectados en captura 390, corregidos en CSS/formateo y verificados por DOM (`getComputedStyle`) y captura; 23 verdes.
