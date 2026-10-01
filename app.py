@@ -623,10 +623,17 @@ with tab_exportar:
                              "grafico": {"kind": "vbar",
                                           "etiquetas": list(r["tabla"]["grupo"]),
                                           "valores": [float(v) for v in r["tabla"]["media"]]}}
-        pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df),
-                              out, cruce_pdf)
-        st.download_button("Descargar PDF", pdf_doc,
-                           "informe_encuestaexpress.pdf", "application/pdf")
+        pdf_doc = None
+        try:
+            pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df),
+                                  out, cruce_pdf)
+        except Exception:
+            import traceback
+            st.error("El PDF ha fallado al generarse. Copia este detalle para diagnosticarlo:")
+            st.code(traceback.format_exc(limit=3))
+        if pdf_doc is not None:
+            st.download_button("Descargar PDF", pdf_doc,
+                               "informe_encuestaexpress.pdf", "application/pdf")
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as z:
             for c in analizables:

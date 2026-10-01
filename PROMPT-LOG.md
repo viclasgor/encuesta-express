@@ -138,6 +138,15 @@
 - **No verificado:** pantalla real del usuario ni Cloud con esto.
 
 ---
+### 2026-10-01 — PDF: error visible en vez de página tumbada
+- **Pedí (resumen):** el PDF fallaba en Cloud sin reproducirse en local; mostrar el error en la app.
+- **IA hizo bien:** `try/except` solo alrededor de `generar_pdf` en Exportar: si falla, aviso + `traceback` visible (Cloud redacta los no capturados); sin cambios en éxito; 24 verdes.
+- **IA falló en / corregí:** nada nuevo; el TypeError original sigue sin reproducirse (ejemplo, cruces, vacíos y fuzzing con emojis/150 categorías/BOM generan bien).
+- **Cómo lo detecté:** pendiente del mensaje visible tras tu push y prueba.
+- **Decisión técnica mía:** no parchear a ciegas; el traceback visible nos dirá la línea exacta.
+- **No verificado:** Cloud con este cambio.
+
+---
 ### 2026-10-01 — PDF con gráficos dibujados (sin Kaleido)
 - **Pedí (resumen):** explicar el PDF actual en 5 líneas; dibujar barras con fpdf2 (H con n y %, V para escala, apiladas/agrupadas si caben o solo tabla); título+tabla+gráfico por pregunta sin cortes; portada; TTF del repo; sin Kaleido/navegador/matplotlib ni tocar cálculos; módulo separado + test; botón existente; Cloud sin binarios.
 - **IA hizo bien:** `src/pdf_report.py` (hbar/vbar/stacked con paleta, etiquetas truncadas, salto de página previo); `export_pdf` acepta `grafico`+`cruce`; botón genera el nuevo PDF; test con ejemplo (8 páginas, rects con los 4 colores verificados en streams); 24 verdes + arranque.
