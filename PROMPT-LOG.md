@@ -113,6 +113,14 @@
 - **No verificado:** pantalla real del usuario ni Cloud con este cambio.
 
 ---
+### 2026-10-01 — Licencia MIT
+- **Pedí (resumen):** añadir una MIT License al repo.
+- **IA hizo bien:** archivo `LICENSE` con texto MIT estándar, copyright 2026 a nombre de tu identidad git (viclasgor).
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** cambio solo de docs; sin código afectado.
+- **Decisión técnica mía:** si quieres otro nombre o año en el copyright, dímelo y lo cambio.
+
+---
 ### 2026-10-01 — Regla PROMPT-LOG automático (AGENTS.md)
 - **Pedí (resumen):** cada cambio quede en PROMPT-LOG sin pedirlo, antes del commit; añadir la regla a AGENTS.md.
 - **IA hizo bien:** regla 7 reescrita (registro por tarea, antes del commit, con errores y detección); aplicada a esta misma tarea.
