@@ -35,6 +35,8 @@ st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
 st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
         "<span class='ee-nombre'>EncuestaExpress</span>"
         "<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span></div>")
+st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
+        "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
 st.html("<div class='ee-marco-cols' aria-hidden='true'><span>A</span><span>B</span>"
         "<span>C</span><span>D</span><span>E</span><span>F</span><span>G</span>"
         "<span>H</span></div>"
