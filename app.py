@@ -73,7 +73,13 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
             elif str(c).lower().startswith("pct"):
                 h.append(f"<td class='num'>{float(v):.1f}%</td>".replace(".", ","))
             elif c in num_cols:
-                h.append(f"<td class='num'>{_esc(str(v))}</td>")
+                num_txt = str(v)
+                try:
+                    f = float(v)
+                    num_txt = str(int(f)) if f.is_integer() else str(v)
+                except (TypeError, ValueError):
+                    pass
+                h.append(f"<td class='num'>{_esc(num_txt)}</td>")
             else:
                 h.append(f"<td>{_esc(str(v))}</td>")
         if reparto:
