@@ -23,6 +23,8 @@ TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "id",
 ETIQUETAS_TIPO = {"categorica": "Opción única", "multiple": "Casillas múltiples",
                   "escala": "Escala 1–5", "texto": "Texto abierto"}
 SERIES = PALETA["gama"]  # misma paleta que los graficos: verde, azul, coral, amarillo
+GITHUB_URL = "https://github.com/TU_USUARIO/TU_REPO"  # TODO: rellenar (ver informe)
+README_URL = "https://github.com/TU_USUARIO/TU_REPO#readme"  # TODO: rellenar
 
 st.set_page_config(page_title="EncuestaExpress", layout="wide",
                    page_icon="📊",
@@ -31,17 +33,8 @@ st.set_page_config(page_title="EncuestaExpress", layout="wide",
 _css = (Path(__file__).parent / "assets" / "estilos.css").read_text(encoding="utf-8")
 st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
 
-# --- Franja superior + barra de formulas ---
-st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
-        "<span class='ee-nombre'>EncuestaExpress</span>"
-        "<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span></div>")
-st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
-        "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
-
-
 def slug_de(col: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", col.lower()).strip("_")[:40] or "pregunta"
-
 
 def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
                 reparto: bool = False) -> str:
@@ -95,13 +88,11 @@ def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False,
         h.append("</tr>")
     return "".join(h) + "</tbody></table></div>"
 
-
 def con_total(tabla: pd.DataFrame) -> pd.DataFrame:
     """Fila Total solo para mostrar (el CSV descargado no la lleva)."""
     fila = pd.DataFrame([{"categoria": "Total", "n": int(tabla["n"].sum()),
                            "pct": round(float(tabla["pct"].sum()), 1)}], index=["Total"])
     return pd.concat([tabla, fila])
-
 
 def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
     """La tabla que se muestra (y descarga) para una pregunta."""
@@ -113,29 +104,218 @@ def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
         return tabla_multiple(df[col])
     return tabla_frecuencias(df[col])
 
-
 def barra_formula(num: int, col: str, tipo: str, n_valido: int, n_total: int) -> None:
     etiqueta = ETIQUETAS_TIPO.get(tipo, tipo)
     st.html(f"<div class='ee-formula'><span class='ee-fx'>fx</span>"
             f"P{num} · {etiqueta} · n = {n_valido}/{n_total} · {_esc(col)}</div>")
 
-
 def n_valido_total(df: pd.DataFrame, col: str) -> tuple[int, int]:
     return int((df[col].astype(str).str.strip() != "").sum()), len(df)
-
 
 def numero_pregunta(df: pd.DataFrame, col: str) -> int:
     return list(df.columns).index(col) + 1  # P1, P2... en orden de columna
 
+def limpiar_datos() -> None:
+    """Vuelve al estado vacío (para 'Subir otro archivo' / 'Dejar el ejemplo')."""
+    st.session_state["up_key"] = st.session_state.get("up_key", 0) + 1
+    st.session_state["usar_ejemplo"] = False
+    st.session_state["resaltar_carga"] = False
 
-# --- Sin barra lateral: todo vive en la pagina ---
+# --- Lectura de estado (widgets aún no dibujados; mismo estado que verán) ---
+uk = st.session_state.get("up_key", 0)
+arch_hero = st.session_state.get(f"up_hero_{uk}")
+arch_mas = st.session_state.get(f"up_mas_{uk}")
+archivo = arch_hero or arch_mas
+usa_ejemplo = bool(st.session_state.get("usar_ejemplo"))
+df = None
+if archivo is not None:
+    try:
+        if str(archivo.name).lower().endswith(".xlsx"):
+            df = cargar_excel(archivo)
+        else:
+            df = cargar_csv(archivo)
+    except Exception as e:
+        st.error(f"No pude leer el archivo ({_esc(str(archivo.name))}). "
+                 "Usa .csv (UTF-8, comas) o .xlsx con la primera fila de preguntas. "
+                 f"Detalle: {e}")
+elif usa_ejemplo:
+    df = cargar_csv("data/ejemplo_encuesta.csv")
 
-archivo_heroe = None
-df, tipos_final, f_col_f, f_val_f = None, {}, None, "Todos"
-n_antes = 0
+tipos_final: dict[str, str] = {}
+f_col_f, f_val_f, n_antes = None, "Todos", 0
+analizables: list[str] = []
+perfil = {"n_total": 0, "n_valido_por_columna": {}}
+completitud, hay_calidad = 1.0, False
+if df is not None:
+    tipos_auto = detectar_tipos(df)
+    for col in df.columns:
+        clave = f"tipo_{col}"
+        det = tipos_auto[col]
+        tipos_final[col] = (st.session_state.get(clave, det)
+                            if st.session_state.get(clave) in TIPOS else det)
+    cat_filtro = [c for c in df.columns if tipos_auto[c] == "categorica"]
+    if st.session_state.get("filtro_col") in (["(sin filtro)"] + cat_filtro):
+        f_col_f = st.session_state.get("filtro_col")
+    if f_col_f not in (None, "(sin filtro)"):
+        vals = ["Todos"] + sorted({v.strip() for v in df[f_col_f].astype(str)
+                                   if v.strip() != ""})
+        if st.session_state.get("filtro_val") in vals:
+            f_val_f = st.session_state.get("filtro_val")
+    n_antes = len(df)
+    df = aplicar_filtro(df, f_col_f if f_col_f != "(sin filtro)" else None, f_val_f)
+    if len(df) == 0:
+        st.warning("El filtro no deja respuestas. Elige otro valor.")
+        df = None
+    else:
+        analizables = [c for c in df.columns
+                       if tipos_final[c] not in ("ignorar", "temporal", "email", "id")]
+        perfil = perfil_muestra(df)
+        if len(df) and analizables:
+            vacias = sum((df[c].astype(str).str.strip() == "").sum() for c in analizables)
+            completitud = 1 - vacias / (len(df) * len(analizables))
+        hay_calidad = (completitud < 0.8) or (len(df) < 30)
+base_cruce = st.session_state.get("pct_base", "fila")
+if base_cruce not in ("fila", "columna"):
+    base_cruce = "fila"
 
-tab_inicio, tab_informe, tab_cruces, tab_exportar = st.tabs(
-    ["Inicio", "Informe", "Cruces", "Exportar"])
+def nombre_archivo() -> str:
+    if archivo is not None:
+        return str(archivo.name)
+    if usa_ejemplo and df is not None:
+        return "datos de ejemplo"
+    return "Sin archivo"
+
+@st.dialog("Formato esperado del CSV")
+def ayuda_dialog() -> None:
+    st.markdown("- Exportado de **Google Forms**: primera fila = preguntas.\n"
+                "- Codificación **UTF-8**, separador **coma** (o Excel `.xlsx`).\n"
+                "- Múltiples como `Opción A, Opción B` en una celda.\n"
+                "- Vacíos = sin respuesta; email/fecha/id se pueden ignorar.")
+
+def _bloques_informe() -> tuple[list[dict], dict | None]:
+    bloques = []
+    for c in analizables:
+        t = tipos_final[c]
+        if t == "texto":
+            resp = listar_texto(df[c])
+            bloques.append({"pregunta": c, "tipo": t,
+                            "resumen": f"{len(resp)} respuestas de {len(df)}",
+                            "tabla_html": pd.DataFrame({"respuesta": resp}).to_html(index=False),
+                            "fig": None})
+        elif t == "escala":
+            r = resumen_escala(df[c])
+            dist = distribucion_escala(df[c])
+            bloques.append({"pregunta": c, "tipo": t,
+                            "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
+                                        f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
+                            "tabla_html": dist.to_html(index=False),
+                            "fig": barras_verticales(dist)})
+        elif t == "multiple":
+            m = tabla_multiple(df[c])
+            bloques.append({"pregunta": c, "tipo": t,
+                            "resumen": (f"{m.attrs['n_respondientes']} respondientes, "
+                                        "% sobre respondientes"),
+                            "tabla_html": m.to_html(index=False),
+                            "fig": barras_horizontales(
+                                m.rename(columns={"opcion": "categoria", "menciones": "n"}))})
+        else:
+            f = tabla_frecuencias(df[c])
+            bloques.append({"pregunta": c, "tipo": t,
+                            "resumen": f"n válido {f.attrs['n_valido']}/{f.attrs['n_total']}",
+                            "tabla_html": f.to_html(index=False),
+                            "fig": barras_horizontales(f)})
+    f_c = st.session_state.get("cruce_filas")
+    c_c = st.session_state.get("cruce_cols")
+    cruce = None
+    if (df is not None and f_c in list(df.columns) and c_c in list(df.columns)
+            and f_c != c_c):
+        tf, tc = tipos_final.get(f_c), tipos_final.get(c_c)
+        if tf == "categorica" and tc == "categorica":
+            r = cruce_cat_cat(df[f_c], df[c_c])
+            cruce = {"titulo": f"Cruce: {f_c} × {c_c}",
+                     "tablas_html": [r["n"].to_html(), r["pct"].to_html()],
+                     "fig": barras_cruce(r["pct"], "apiladas")}
+    return bloques, cruce
+
+def _html_doc() -> str:
+    bloques, cruce = _bloques_informe()
+    return generar_informe_html("Informe EncuestaExpress", str(date.today()),
+                                len(df), bloques, cruce)
+
+# --- Cabecera: franja, fx, toolbar con menús reales ---
+st.html("<div class='ee-topbar'><span class='ee-logo'>E</span>"
+        "<span class='ee-nombre'>EncuestaExpress</span>"
+        f"<span class='ee-lema'>Informes de encuestas sin pelearte con Excel</span>"
+        f"<span class='ee-archivo'>{_esc(nombre_archivo())}"
+        + (f" · {len(df)} filas × {len(df.columns)} columnas" if df is not None else "")
+        + "</span></div>")
+_sel = st.session_state.get("cruce_filas")
+if df is not None and _sel in (df.columns if df is not None else []):
+    _nv, _nt = n_valido_total(df, _sel)
+    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
+            f"<span class='ee-fx'>fx</span><span>P{numero_pregunta(df, _sel)} · "
+            f"{ETIQUETAS_TIPO.get(tipos_final.get(_sel, ''), '')} · {_esc(_sel)}</span></div>")
+else:
+    st.html("<div class='ee-fxbar'><span class='ee-a1'>A1</span>"
+            "<span class='ee-fx'>fx</span><span>=ANALIZAR(encuesta.csv)</span></div>")
+
+with st.container():
+    c_m1, c_m2, c_m3, c_m4, c_est = st.columns([1, 1, 1, 1, 2])
+    with c_m1:
+        with st.popover("Archivo"):
+            if st.button("Subir otro archivo", key="m_arch_nuevo"):
+                limpiar_datos()
+                st.rerun()
+            if st.button("Probar con datos de ejemplo", key="m_arch_ej"):
+                st.session_state["usar_ejemplo"] = True
+                st.rerun()
+            if usa_ejemplo and st.button("Dejar el ejemplo", key="m_arch_quitar"):
+                limpiar_datos()
+                st.rerun()
+    with c_m2:
+        with st.popover("Datos", disabled=df is None):
+            if df is not None:
+                st.subheader("Filtro por segmento")
+                if cat_filtro:
+                    f_col_f = st.selectbox("Columna", ["(sin filtro)"] + cat_filtro,
+                                           key="filtro_col")
+                    if f_col_f != "(sin filtro)":
+                        f_val_f = st.selectbox("Valor", ["Todos"] + sorted(
+                            {v.strip() for v in df[f_col_f].astype(str)
+                             if v.strip() != ""}),
+                            key="filtro_val",
+                            help="Filtra todo el informe por este valor.")
+                with st.expander("Revisar tipos detectados", expanded=True):
+                    st.caption("Corrige el tipo o ignora columnas (id, email, fecha...).")
+                    for col in df.columns:
+                        det = tipos_auto[col]
+                        if sugerir_ignorar(det):
+                            st.caption(f"Sugerencia: ignorar '{col}' ({det}).")
+                        tipos_final[col] = st.selectbox(
+                            col, TIPOS, index=TIPOS.index(tipos_final[col]),
+                            key=f"tipo_{col}")
+            else:
+                st.caption("Carga datos para ver opciones.")
+    with c_m3:
+        with st.popover("Informe", disabled=df is None or not analizables):
+            if df is not None and analizables:
+                st.download_button("Descargar HTML", _html_doc(), "informe.html",
+                                   "text/html", key="m_dl_html")
+            else:
+                st.caption("Carga datos para descargar.")
+    with c_m4:
+        if st.button("Ayuda", key="m_ayuda"):
+            ayuda_dialog()
+    with c_est:
+        if df is None:
+            st.html("<div class='ee-estado-top'><span class='ee-dot'></span>Listo</div>")
+        else:
+            st.html("<div class='ee-estado-top'><span class='ee-dot ee-ok'></span>"
+                    f"Datos cargados · n={len(df)}"
+                    + (" · ⚠ revisa calidad" if hay_calidad else "") + "</div>")
+
+tab_inicio, tab_informe, tab_cruces, tab_exportar, tab_mas = st.tabs(
+    ["Inicio", "Informe", "Cruces", "Exportar", "+"])
 
 with tab_inicio:
     st.html("<div class='ee-hero'><h1>Sube tu encuesta.<br>Obtén el "
@@ -153,13 +333,13 @@ with tab_inicio:
             st.rerun()
     st.html("<div class='ee-drop'>Suelta aquí el archivo. Se queda en tu navegador "
             "mientras trabajas con él.</div>")
-    archivo_heroe = st.file_uploader("CSV o Excel de Google Forms",
-                                     type=["csv", "xlsx"], label_visibility="collapsed")
-    if st.session_state.get("resaltar_carga") and archivo_heroe is None \
-            and not st.session_state.get("usar_ejemplo"):
+    up1 = st.file_uploader("CSV o Excel de Google Forms", type=["csv", "xlsx"],
+                           label_visibility="collapsed", key=f"up_hero_{uk}")
+    if up1 is not None and archivo is None:
+        st.rerun()
+    if st.session_state.get("resaltar_carga") and archivo is None and not usa_ejemplo:
         st.info("⬆ Elige el archivo en la zona de arriba (el botón no puede abrir "
                 "el diálogo del sistema; el navegador solo lo abre desde el uploader).")
-    # Vista previa con el ejemplo (sin cargarlo como datos de trabajo).
     df_ej = cargar_csv("data/ejemplo_encuesta.csv")
     tipos_ej = detectar_tipos(df_ej)
     col_prev = next(c for c in df_ej.columns if tipos_ej[c] == "categorica"
@@ -173,68 +353,6 @@ with tab_inicio:
             "<span>La app detecta cada pregunta; puedes corregirla.</span></div>"
             "<div class='ee-paso'><b>Explora y descarga</b>"
             "<span>Informe, cruces y exportación en HTML.</span></div></div>")
-
-# --- Datos de trabajo ---
-try:
-    if archivo_heroe is not None:
-        if archivo_heroe.name.lower().endswith(".xlsx"):
-            df = cargar_excel(archivo_heroe)
-        elif archivo_heroe.name.lower().endswith(".csv"):
-            df = cargar_csv(archivo_heroe)
-        else:
-            st.error("Formato no soportado: usa .csv o .xlsx (el .xls antiguo no vale).")
-            df = None
-    elif st.session_state.get("usar_ejemplo"):
-        df = cargar_csv("data/ejemplo_encuesta.csv")
-except Exception as e:
-    st.error(f"No pude leer el archivo. Revisa que sea .csv (UTF-8, comas) o .xlsx "
-             f"con la primera fila de preguntas. Detalle: {e}")
-    df = None
-
-analizables: list[str] = []
-perfil = {"n_total": 0, "n_valido_por_columna": {}}
-if df is not None:
-    tipos_auto = detectar_tipos(df)
-    with st.expander("⚙ Datos y opciones (filtro y tipos)", expanded=False):
-        if st.session_state.get("usar_ejemplo"):
-            st.caption("Usando datos de ejemplo.")
-            if st.button("Dejar el ejemplo"):
-                st.session_state["usar_ejemplo"] = False
-                st.rerun()
-        st.subheader("Filtro por segmento")
-        cat_filtro = [c for c in df.columns if tipos_auto[c] == "categorica"]
-        if cat_filtro:
-            f_col_f = st.selectbox("Columna", ["(sin filtro)"] + cat_filtro, key="filtro_col")
-            if f_col_f != "(sin filtro)":
-                f_val_f = st.selectbox("Valor", ["Todos"] + sorted(
-                    {v.strip() for v in df[f_col_f].astype(str) if v.strip() != ""}),
-                    key="filtro_val", help="Filtra todo el informe por este valor.")
-        with st.expander("Revisar tipos detectados"):
-            st.caption("Corrige el tipo o ignora columnas (id, email, fecha...).")
-            for col in df.columns:
-                det = tipos_auto[col]
-                if sugerir_ignorar(det):
-                    st.caption(f"Sugerencia: ignorar '{col}' ({det}).")
-                tipos_final[col] = st.selectbox(col, TIPOS,
-                                                index=TIPOS.index(det) if det in TIPOS else 0,
-                                                key=f"tipo_{col}")
-    n_antes = len(df)
-    df = aplicar_filtro(df, f_col_f if f_col_f != "(sin filtro)" else None, f_val_f)
-    if len(df) < n_antes:
-        st.info(f"Segmento {f_col_f} = {f_val_f}: {len(df)} de {n_antes} respuestas.")
-    if len(df) == 0:
-        st.warning("El filtro no deja respuestas. Elige otro valor.")
-        df = None
-    else:
-        analizables = [c for c in df.columns
-                       if tipos_final[c] not in ("ignorar", "temporal", "email", "id")]
-        perfil = perfil_muestra(df)
-        if not analizables:
-            st.warning("Has ignorado todas las columnas. Activa al menos una.")
-            analizables = []
-else:
-    base_cruce = st.session_state.get("pct_base", "fila")
-
 
 def mostrar_pregunta(col: str, tipo: str) -> None:
     """Una pregunta con barra de fórmulas, tabla estilo hoja y gráfico."""
@@ -298,13 +416,10 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
             st.plotly_chart(barras_horizontales(tabla), width="stretch",
                             key=f"chart_{slug}_cat")
 
-
 with tab_informe:
     if df is None or not analizables:
         st.info("Sube un archivo en la pestaña Inicio para ver el informe.")
     else:
-        vacias = sum((df[c].astype(str).str.strip() == "").sum() for c in analizables)
-        completitud = 1 - vacias / (len(df) * len(analizables)) if len(df) else 1.0
         m1, m2, m3 = st.columns(3)
         m1.metric("Respuestas", len(df))
         m2.metric("Preguntas analizadas", len(analizables))
@@ -406,80 +521,6 @@ with tab_cruces:
                 st.info("Elige dos categóricas, una escala con una categórica, "
                         "o una múltiple con una categórica.")
 
-
-def bloque_pregunta(col: str, tipo: str) -> dict:
-    if tipo == "texto":
-        resp = listar_texto(df[col])
-        return {"pregunta": col, "tipo": tipo,
-                "resumen": f"{len(resp)} respuestas de {len(df)}",
-                "tabla_html": pd.DataFrame({"respuesta": resp}).to_html(index=False),
-                "fig": None}
-    if tipo == "escala":
-        r = resumen_escala(df[col])
-        dist = distribucion_escala(df[col])
-        return {"pregunta": col, "tipo": tipo,
-                "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
-                            f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
-                "tabla_html": dist.to_html(index=False),
-                "fig": barras_verticales(dist)}
-    if tipo == "multiple":
-        t = tabla_multiple(df[col])
-        return {"pregunta": col, "tipo": tipo,
-                "resumen": (f"{t.attrs['n_respondientes']} respondientes, "
-                            "% sobre respondientes"),
-                "tabla_html": t.to_html(index=False),
-                "fig": barras_horizontales(
-                    t.rename(columns={"opcion": "categoria", "menciones": "n"}))}
-    t = tabla_frecuencias(df[col])
-    return {"pregunta": col, "tipo": tipo,
-            "resumen": f"n válido {t.attrs['n_valido']}/{t.attrs['n_total']}",
-            "tabla_html": t.to_html(index=False),
-            "fig": barras_horizontales(t)}
-
-
-def bloque_cruce() -> dict | None:
-    f_c = st.session_state.get("cruce_filas")
-    c_c = st.session_state.get("cruce_cols")
-    if df is None or not f_c or not c_c or f_c == c_c:
-        return None
-    if f_c not in df.columns or c_c not in df.columns:
-        return None
-    tf, tc = tipos_final.get(f_c), tipos_final.get(c_c)
-    if tf == "categorica" and tc == "categorica":
-        r = cruce_cat_cat(df[f_c], df[c_c])
-        return {"titulo": f"Cruce: {f_c} × {c_c}",
-                "tablas_html": [r["n"].to_html(), r["pct"].to_html()],
-                "fig": barras_cruce(r["pct"], "apiladas")}
-    if {tf, tc} == {"escala", "categorica"}:
-        col_esc = f_c if tf == "escala" else c_c
-        col_cat = c_c if tf == "escala" else f_c
-        r = cruce_escala_cat(df[col_esc], df[col_cat])
-        return {"titulo": f"Cruce: {col_esc} × {col_cat}",
-                "tablas_html": [r["tabla"].to_html(index=False)],
-                "fig": barras_medias(r["tabla"])}
-    return None
-
-
-def bloque_pdf(col: str, tipo: str) -> dict:
-    if tipo == "texto":
-        resp = listar_texto(df[col])
-        return {"pregunta": col, "resumen": f"{len(resp)} respuestas",
-                "tabla": pd.DataFrame({"respuesta": resp})}
-    if tipo == "escala":
-        r = resumen_escala(df[col])
-        return {"pregunta": col,
-                "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
-                            f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
-                "tabla": distribucion_escala(df[col])}
-    if tipo == "multiple":
-        return {"pregunta": col, "resumen": "% sobre respondientes",
-                "tabla": tabla_multiple(df[col])}
-    t = tabla_frecuencias(df[col])
-    return {"pregunta": col,
-            "resumen": f"n válido {t.attrs['n_valido']}/{t.attrs['n_total']}",
-            "tabla": t}
-
-
 with tab_exportar:
     if df is None or not analizables:
         st.info("Sube un archivo en la pestaña Inicio para descargar el informe.")
@@ -487,13 +528,33 @@ with tab_exportar:
         st.markdown("### Descargar el informe")
         st.caption("Se exporta lo visible: filtro y tipos corregidos aplicados; "
                    "el cruce si lo configuraste en su pestaña.")
-        html_doc = generar_informe_html(
-            "Informe EncuestaExpress", str(date.today()), len(df),
-            [bloque_pregunta(c, tipos_final[c]) for c in analizables], bloque_cruce())
+        bloques, cruce = _bloques_informe()
+        html_doc = generar_informe_html("Informe EncuestaExpress", str(date.today()),
+                                        len(df), bloques, cruce)
         st.download_button("Descargar informe HTML", html_doc,
                            "informe_encuestaexpress.html", "text/html")
-        pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df),
-                              [bloque_pdf(c, tipos_final[c]) for c in analizables])
+        out = []
+        for c in analizables:
+            t = tipos_final[c]
+            if t == "texto":
+                resp = listar_texto(df[c])
+                out.append({"pregunta": c, "resumen": f"{len(resp)} respuestas",
+                            "tabla": pd.DataFrame({"respuesta": resp})})
+            elif t == "escala":
+                r = resumen_escala(df[c])
+                out.append({"pregunta": c,
+                            "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
+                                        f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
+                            "tabla": distribucion_escala(df[c])})
+            elif t == "multiple":
+                out.append({"pregunta": c, "resumen": "% sobre respondientes",
+                            "tabla": tabla_multiple(df[c])})
+            else:
+                f = tabla_frecuencias(df[c])
+                out.append({"pregunta": c,
+                            "resumen": f"n válido {f.attrs['n_valido']}/{f.attrs['n_total']}",
+                            "tabla": f})
+        pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df), out)
         st.download_button("Descargar PDF (beta, sin gráficos)", pdf_doc,
                            "informe_encuestaexpress.pdf", "application/pdf")
         buf = io.BytesIO()
@@ -503,12 +564,52 @@ with tab_exportar:
         st.download_button("Descargar todas las tablas (ZIP)", buf.getvalue(),
                            "tablas_encuestaexpress.zip", "application/zip")
 
-# Barra de estado siempre visible, con numeros reales o 0/0.
+with tab_mas:
+    st.markdown("### Subir otro archivo")
+    st.caption("CSV de Google Forms o Excel (xlsx). Sustituye al actual.")
+    up2 = st.file_uploader("CSV o Excel", type=["csv", "xlsx"],
+                           label_visibility="collapsed", key=f"up_mas_{uk}")
+    if up2 is not None and archivo is None:
+        st.rerun()
+    if st.button("Probar con datos de ejemplo", key="mas_ejemplo"):
+        st.session_state["usar_ejemplo"] = True
+        st.rerun()
+
+# --- Pie: estadísticas, enlaces, privacidad y estado ---
+_sel2 = st.session_state.get("cruce_filas")
+with st.container(border=True):
+    if df is not None and _sel2 in list(df.columns):
+        t2 = tipos_final.get(_sel2)
+        st.caption(f"Pregunta seleccionada: {_esc(_sel2)}")
+        if t2 == "escala":
+            r = resumen_escala(df[_sel2])
+            d = distribucion_escala(df[_sel2])
+            s1, s2, s3, s4 = st.columns(4)
+            s1.metric("Recuento", r["n_valido"])
+            s2.metric("Media", r["media"])
+            s3.metric("Mínimo", d["valor"].min())
+            s4.metric("Máximo", d["valor"].max())
+        elif t2 == "categorica":
+            f = tabla_frecuencias(df[_sel2])
+            s1, s2, s3 = st.columns(3)
+            s1.metric("Recuento", f.attrs["n_valido"])
+            s2.metric("Nº categorías", len(f))
+            s3.metric("Moda", f.sort_values("n", ascending=False).iloc[0]["categoria"])
+        else:
+            st.caption("Estadísticas disponibles para escala y categórica única.")
+    else:
+        st.caption("Elige una pregunta en Cruces (Filas) para ver sus estadísticas aquí.")
+
+st.html("<div class='ee-pie'>"
+        f"<a href='{GITHUB_URL}'>GitHub</a> · <a href='{README_URL}'>README</a> · "
+        "Tus datos no se guardan: se procesan en memoria y nada se escribe a disco "
+        "ni a bases de datos.</div>")
+
 if df is None:
     st.html("<div class='ee-estado'><span>Listo</span><span>0 respuestas</span>"
             "<span>0 preguntas</span><span>Esperando archivo</span></div>")
 else:
-    origen = (archivo_heroe.name if archivo_heroe is not None else "datos de ejemplo")
+    origen = str(archivo.name) if archivo is not None else "datos de ejemplo"
     segmento = (f" · segmento {f_col_f}={f_val_f}"
                 if f_col_f not in (None, "(sin filtro)") and f_val_f != "Todos" else "")
     st.html(f"<div class='ee-estado'><span>Listo</span><span>{len(df)} respuestas</span>"
