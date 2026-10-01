@@ -250,6 +250,12 @@ def mostrar_pregunta(num: int, col: str, tipo: str) -> None:
 tab_resumen, tab_informe, tab_cruces, tab_exportar = st.tabs(
     ["Resumen", "Informe", "Cruces", "Exportar"])
 
+origen = archivo.name if archivo is not None else "datos de ejemplo"
+segmento = f" · segmento {f_col_f}={f_val_f}" if f_col_f not in (None, "(sin filtro)") and f_val_f != "Todos" else ""
+st.html(f"<div class='ee-estado'><span>{len(df)} respuestas</span>"
+        f"<span>{len(analizables)} preguntas</span>"
+        f"<span>{origen}{segmento}</span></div>")
+
 with tab_resumen:
     vacias = sum((df[c].astype(str).str.strip() == "").sum() for c in analizables)
     completitud = 1 - vacias / (len(df) * len(analizables)) if len(df) else 1.0
