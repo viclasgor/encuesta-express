@@ -571,23 +571,61 @@ with tab_exportar:
             if t == "texto":
                 resp = listar_texto(df[c])
                 out.append({"pregunta": c, "resumen": f"{len(resp)} respuestas",
-                            "tabla": pd.DataFrame({"respuesta": resp})})
+                            "tabla": pd.DataFrame({"respuesta": resp}),
+                            "grafico": None})
             elif t == "escala":
                 r = resumen_escala(df[c])
+                dist = distribucion_escala(df[c])
                 out.append({"pregunta": c,
                             "resumen": (f"media {r['media']}, mediana {r['mediana']}, "
                                         f"DT {r['dt']}, n {r['n_valido']}/{r['n_total']}"),
-                            "tabla": distribucion_escala(df[c])})
+                            "tabla": dist,
+                            "grafico": {"kind": "vbar",
+                                         "etiquetas": [str(v) for v in dist["valor"]],
+                                         "valores": [float(v) for v in dist["n"]]}})
             elif t == "multiple":
+                m = tabla_multiple(df[c])
                 out.append({"pregunta": c, "resumen": "% sobre respondientes",
-                            "tabla": tabla_multiple(df[c])})
+                            "tabla": m,
+                            "grafico": {"kind": "hbar",
+                                         "etiquetas": list(m["opcion"]),
+                                         "valores": [float(v) for v in m["menciones"]],
+                                         "pcts": [float(v) for v in m["pct_resp"]]}})
             else:
                 f = tabla_frecuencias(df[c])
                 out.append({"pregunta": c,
                             "resumen": f"n válido {f.attrs['n_valido']}/{f.attrs['n_total']}",
-                            "tabla": f})
-        pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df), out)
-        st.download_button("Descargar PDF (beta, sin gráficos)", pdf_doc,
+                            "tabla": f,
+                            "grafico": {"kind": "hbar",
+                                         "etiquetas": list(f["categoria"]),
+                                         "valores": [float(v) for v in f["n"]],
+                                         "pcts": [float(v) for v in f["pct"]]}})
+        f_c = st.session_state.get("cruce_filas")
+        c_c = st.session_state.get("cruce_cols")
+        cruce_pdf = None
+        if (f_c in list(df.columns) and c_c in list(df.columns) and f_c != c_c
+                and {tipos_final.get(f_c), tipos_final.get(c_c)} <= {"categorica", "escala"}):
+            tf = tipos_final.get(f_c)
+            col_esc = f_c if tf == "escala" else (c_c if tipos_final.get(c_c) == "escala" else None)
+            if tf == "categorica" and tipos_final.get(c_c) == "categorica":
+                r = cruce_cat_cat(df[f_c], df[c_c])
+                n = r["n"].drop(index="Total").drop(columns="Total")
+                cruce_pdf = {"titulo": f"Cruce: {f_c} × {c_c}",
+                             "tabla": r["n"].reset_index(),
+                             "grafico": {"kind": "stacked", "filas": list(n.index),
+                                          "columnas": list(n.columns),
+                                          "pct": r["pct"].values.tolist()}}
+            elif col_esc is not None:
+                col_cat = c_c if col_esc == f_c else f_c
+                r = cruce_escala_cat(df[col_esc], df[col_cat])
+                cruce_pdf = {"titulo": f"Cruce: {col_esc} × {col_cat}",
+                             "tabla": r["tabla"],
+                             "grafico": {"kind": "vbar",
+                                          "etiquetas": list(r["tabla"]["grupo"]),
+                                          "valores": [float(v) for v in r["tabla"]["media"]]}}
+        pdf_doc = generar_pdf("Informe EncuestaExpress", str(date.today()), len(df),
+                              out, cruce_pdf)
+        st.download_button("Descargar PDF", pdf_doc,
                            "informe_encuestaexpress.pdf", "application/pdf")
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as z:
