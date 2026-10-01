@@ -127,3 +127,12 @@
 - **IA falló en / corregí:** nada.
 - **Cómo lo detecté:** cambio solo de docs; `git status` limpio salvo AGENTS.md y PROMPT-LOG.md.
 - **Decisión técnica mía:** ninguna.
+
+---
+### 2026-10-01 — Header y footer de app real (menús, toolbar, +, stats)
+- **Pedí (resumen):** header con menús reales/archivo/fx dinámico/toolbar/estado y footer con +/stats/enlaces/privacidad; solo visual, sin `src/` ni deps; 10 líneas previas; CSS `.ee-*`; responsive 768; capturas 1280/390; tests y commits pequeños.
+- **IA hizo bien:** popovers Archivo/Datos/Informe con acciones reales + diálogo Ayuda; `+` con uploader; stats con funciones existentes (min/max de `distribucion`, moda de `frecuencias`); calidad omitida (sin función en `src/`); placeholders GitHub/README; privacidad con redacción verificada (solo `to_csv` a string en memoria); 23 verdes.
+- **IA falló en / corregí:** defs usadas antes de definirse (`ayuda_dialog`, `_html_doc`) + popovers que crujían sin datos → reorden + guardas; escala mostraba `2.0` → enteros en el formateo visual.
+- **Cómo lo detecté:** `py_compile`/lectura; clics reales (ejemplo, descarga `informe.html`, tipos, Ayuda); capturas 1280/390.
+- **Decisión técnica mía:** menús como acciones (cambiar de pestaña por código no existe en 1.64); "Subir" resetea al héroe (el diálogo no se puede abrir); lectura de estado antes de dibujar para cabecera sin retardo.
+- **No verificado:** pantalla real del usuario ni Cloud con esto.
