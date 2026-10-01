@@ -3,11 +3,11 @@ from __future__ import annotations
 import pandas as pd
 import plotly.express as px
 
-# Paleta unica de la app (ver .streamlit/config.toml): gama del acento.
+# Paleta unica de la app (ver .streamlit/config.toml): gama verde hoja de calculo.
 PALETA = {
-    "acento": "#0B7285",
-    "gama": ["#0B7285", "#228E9B", "#3AA99E", "#66C2A5", "#99D5C9", "#C9E9E2"],
-    "rejilla": "#E9ECEF",
+    "acento": "#1E7E34",
+    "gama": ["#1E7E34", "#2FA84F", "#5CB85C", "#8CCB8C", "#B9DFBB", "#DFF0E1"],
+    "rejilla": "#E5E7EB",
     "texto": "#212529",
     "fondo": "#FFFFFF",
 }

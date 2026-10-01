@@ -3,6 +3,7 @@ import io
 import re
 import zipfile
 from datetime import date
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 from src.analysis import (
@@ -17,26 +18,55 @@ from src.export_pdf import generar_pdf
 from src.chi2 import chi_cuadrado_cat
 
 TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "id", "ignorar"]
+ETIQUETAS_TIPO = {"categorica": "Opción única", "multiple": "Casillas múltiples",
+                  "escala": "Escala 1–5", "texto": "Texto abierto"}
 
 st.set_page_config(page_title="EncuestaExpress", layout="wide",
                    page_icon="📊",
                    menu_items={"About": "EncuestaExpress: del CSV de tu encuesta al informe en minutos."})
-st.markdown(
-    "<div class='ee-kicker'>Informe de encuestas</div>"
-    "<div class='ee-brand'>EncuestaExpress</div>"
-    "<div class='ee-tagline'>Del CSV de tu encuesta al informe en minutos.</div>"
-    "<style>.ee-kicker{font-size:0.8rem;font-weight:700;letter-spacing:0.14em;"
-    "text-transform:uppercase;color:#0B7285;margin-bottom:0}"
-    ".ee-brand{font-size:2.4rem;font-weight:800;color:#212529;"
-    "letter-spacing:-0.02em;line-height:1.1;margin-bottom:0;"
-    "border-bottom:3px solid #0B7285;display:inline-block;padding-bottom:0.15rem}"
-    ".ee-tagline{color:#6C757D;font-size:1.0rem;margin-top:0.4rem;margin-bottom:1rem}</style>",
-    unsafe_allow_html=True,
-)
+
+_css = (Path(__file__).parent / "assets" / "estilos.css").read_text(encoding="utf-8")
+st.markdown(f"<style>{_css}</style>", unsafe_allow_html=True)
+st.markdown("<div class='ee-kicker'>Informe de encuestas</div>", unsafe_allow_html=True)
+st.markdown("<div class='ee-brand'>EncuestaExpress</div>", unsafe_allow_html=True)
+st.markdown("<div class='ee-tagline'>Del CSV de tu encuesta al informe en minutos.</div>",
+            unsafe_allow_html=True)
 
 
 def slug_de(col: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", col.lower()).strip("_")[:40] or "pregunta"
+
+
+def estilo_hoja(tabla: pd.DataFrame, mostrar_indice: bool = False):
+    """Aspecto de hoja de cálculo: cuadrícula fina, cabecera suave en negrita,
+    números a la derecha, % con un decimal, Total resaltado y cebra sutil."""
+    num_cols = list(tabla.select_dtypes(include="number").columns)
+    pct_cols = [c for c in tabla.columns if str(c).lower().startswith("pct")]
+    est = tabla.style
+    if not mostrar_indice:
+        est = est.hide(axis="index")
+    if num_cols:
+        est = est.set_properties(subset=num_cols, **{"text-align": "right"})
+    if pct_cols:
+        est = est.format({c: "{:.1f}%" for c in pct_cols})
+    est = est.set_table_styles([
+        {"selector": "th", "props": [("background-color", "#E6EFE7"),
+                                    ("color", "#212529"), ("font-weight", "bold"),
+                                    ("border", "1px solid #DEE2E6"),
+                                    ("padding", "4px 8px")]},
+        {"selector": "td", "props": [("border", "1px solid #DEE2E6"),
+                                    ("padding", "4px 8px")]},
+        {"selector": "tbody tr:nth-child(even)",
+         "props": [("background-color", "#F8FAF8")]},
+    ])
+
+    def _total(fila):
+        marca = "background-color: #D9EAD3; font-weight: bold" if fila.name == "Total" else ""
+        return [marca] * len(fila)
+
+    if "Total" in tabla.index:
+        est = est.apply(_total, axis=1)
+    return est
 
 
 def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
@@ -50,11 +80,15 @@ def tabla_de(df: pd.DataFrame, col: str, tipo: str) -> pd.DataFrame | None:
     return tabla_frecuencias(df[col])
 
 
-def con_totales_resaltados(tabla: pd.DataFrame):
-    def estilo(fila):
-        color = "background-color: #E3F2F2" if fila.name == "Total" else ""
-        return [color] * len(fila)
-    return tabla.style.apply(estilo, axis=1)
+def barra_formula(num: int, col: str, tipo: str, n_valido: int, n_total: int) -> None:
+    etiqueta = ETIQUETAS_TIPO.get(tipo, tipo)
+    st.markdown(f"<div class='ee-formula'><span class='ee-fx'>fx</span>"
+                f"P{num} · {etiqueta} · n={n_valido}/{n_total} — {col}</div>",
+                unsafe_allow_html=True)
+
+
+def n_valido_total(df: pd.DataFrame, col: str) -> tuple[int, int]:
+    return int((df[col].astype(str).str.strip() != "").sum()), len(df)
 
 
 # --- Barra lateral: carga y opciones globales ---
@@ -142,10 +176,11 @@ if not analizables:
     st.stop()
 
 
-def mostrar_pregunta(col: str, tipo: str) -> None:
-    """Una pregunta con su tabla/grafico segun tipo."""
+def mostrar_pregunta(num: int, col: str, tipo: str) -> None:
+    """Una pregunta con barra de fórmulas, tabla estilo hoja y gráfico."""
     with st.container(border=True):
-        st.subheader(col)
+        nv, nt = n_valido_total(df, col)
+        barra_formula(num, col, tipo, nv, nt)
         slug = slug_de(col)
 
         def boton_csv(tabla: pd.DataFrame, sufijo: str) -> None:
@@ -174,7 +209,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
             dist = distribucion_escala(df[col])
             t1, t2 = st.columns([1, 1.2])
             with t1:
-                st.dataframe(dist)
+                st.table(estilo_hoja(dist))
                 boton_csv(dist, "escala")
             with t2:
                 st.plotly_chart(barras_verticales(dist), width="stretch",
@@ -186,7 +221,7 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
                        f"n total: {tabla.attrs['n_total']} · % sobre respondientes")
             t1, t2 = st.columns([1, 1.2])
             with t1:
-                st.dataframe(tabla)
+                st.table(estilo_hoja(tabla))
                 boton_csv(tabla, "multiple")
             with t2:
                 st.plotly_chart(
@@ -195,10 +230,9 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
                     width="stretch", key=f"chart_{slug}_multiple")
             return
         tabla = tabla_frecuencias(df[col])
-        st.caption(f"n válido: {tabla.attrs['n_valido']} · n total: {tabla.attrs['n_total']}")
         t1, t2 = st.columns([1, 1.2])
         with t1:
-            st.dataframe(tabla)
+            st.table(estilo_hoja(tabla))
             boton_csv(tabla, "frecuencias")
         with t2:
             st.plotly_chart(barras_horizontales(tabla), width="stretch",
@@ -225,15 +259,15 @@ with tab_resumen:
         st.info("Muestra pequeña (n<30): el chi-cuadrado casi nunca será aplicable; "
                 "los cruces se leen como descriptivos.")
     with st.expander("Perfil de la muestra"):
-        st.dataframe(pd.DataFrame(
+        st.table(estilo_hoja(pd.DataFrame(
             {"pregunta": list(perfil["n_valido_por_columna"].keys()),
-             "n_válido": list(perfil["n_valido_por_columna"].values())}))
+             "n_válido": list(perfil["n_valido_por_columna"].values())})))
     with st.expander("Ver datos"):
         st.dataframe(df)
 
 with tab_informe:
-    for col in analizables:
-        mostrar_pregunta(col, tipos_final[col])
+    for i, col in enumerate(analizables, start=1):
+        mostrar_pregunta(i, col, tipos_final[col])
 
 with tab_cruces:
     cruzables = [c for c in analizables
@@ -248,10 +282,10 @@ with tab_cruces:
             r = cruce_cat_cat(df[f_col], df[c_col], base=base_cruce)
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.dataframe(con_totales_resaltados(r["n"]))
+            st.table(estilo_hoja(r["n"], mostrar_indice=True))
             st.download_button("Descargar CSV (n)", tabla_a_csv(r["n"].reset_index()),
                                "cruce_n.csv", "text/csv", key="csv_cruce_n")
-            st.dataframe(r["pct"])
+            st.table(estilo_hoja(r["pct"], mostrar_indice=True))
             st.download_button("Descargar CSV (%)", tabla_a_csv(r["pct"].reset_index()),
                                "cruce_pct.csv", "text/csv", key="csv_cruce_pct")
             totales_fila = r["n"].drop(index="Total", errors="ignore")["Total"]
@@ -281,7 +315,7 @@ with tab_cruces:
                              f"p={t['p']} · V de Cramér={t['v_cramer']} · α={t['alfa']}")
                     st.success(t["veredicto"])
                     with st.expander("Frecuencias esperadas"):
-                        st.dataframe(t["esperadas"])
+                        st.table(estilo_hoja(t["esperadas"], mostrar_indice=True))
         elif ((tipos_final[f_col], tipos_final[c_col]).count("escala") == 1
                 and (tipos_final[f_col], tipos_final[c_col]).count("categorica") == 1):
             col_esc = f_col if tipos_final[f_col] == "escala" else c_col
@@ -289,7 +323,7 @@ with tab_cruces:
             r = cruce_escala_cat(df[col_esc], df[col_cat])
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.dataframe(r["tabla"])
+            st.table(estilo_hoja(r["tabla"]))
             st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
                                "cruce_medias.csv", "text/csv", key="csv_cruce_medias")
             if (r["tabla"]["n"] < 5).any():
@@ -304,7 +338,7 @@ with tab_cruces:
             st.info("% sobre respondientes de cada grupo. Solo descriptivo, sin test (S5).")
             if r["excluidos"]:
                 st.warning(f"{r['excluidos']} respuestas excluidas por vacíos.")
-            st.dataframe(r["tabla"])
+            st.table(estilo_hoja(r["tabla"]))
             st.download_button("Descargar CSV", tabla_a_csv(r["tabla"]),
                                "cruce_multiple.csv", "text/csv", key="csv_cruce_mul")
             ancho = r["tabla"].pivot(index="grupo", columns="opcion", values="pct")

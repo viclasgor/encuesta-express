@@ -1,0 +1,22 @@
+/* EncuestaExpress: un unico bloque CSS con clases propias (.ee-*).
+   No usa selectores internos de Streamlit. */
+.ee-kicker {
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #1E7E34; margin-bottom: 0;
+}
+.ee-brand {
+  font-size: 2.4rem; font-weight: 800; color: #212529;
+  letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0;
+  border-bottom: 3px solid #1E7E34; display: inline-block;
+  padding-bottom: 0.15rem;
+}
+.ee-tagline { color: #6C757D; font-size: 1.0rem; margin-top: 0.4rem; margin-bottom: 1rem; }
+.ee-formula {
+  background: #F1F3F5; border: 1px solid #DEE2E6; border-left: 4px solid #1E7E34;
+  border-radius: 6px; padding: 0.45rem 0.8rem; font-size: 0.95rem; margin: 0.6rem 0;
+}
+.ee-fx {
+  font-family: ui-monospace, Consolas, monospace; font-weight: 700; color: #1E7E34;
+  background: #FFFFFF; border: 1px solid #DEE2E6; border-radius: 4px;
+  padding: 0 0.4rem; margin-right: 0.5rem;
+}

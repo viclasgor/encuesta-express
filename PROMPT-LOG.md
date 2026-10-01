@@ -54,3 +54,11 @@
 - **IA falló en / corregí:** nada.
 - **Cómo lo detecté:** reporte del usuario en navegador + `pytest -q` y arranque tras el cambio.
 - **Decisión técnica mía:** ninguna; cambio solo de presentación.
+
+---
+### 2026-10-01 — Estética hoja de cálculo
+- **Pedí (resumen):** rediseño estilo hoja (sin copiar marcas), sin tocar `src/` ni añadir deps; diseño previo en 10 líneas; 9 puntos (tema, tablas Styler, barra fx, estructura, gráficos, vacío, CSS, sin letras falsas, accesibilidad); 1 commit.
+- **IA hizo bien:** tema verde hoja `#1E7E34`; `estilo_hoja` con cuadrícula, cabecera, % 1 decimal, Total y cebra; barra `fx P3 · tipo · n`; `st.table` para informe y cruces; gama verde en Plotly; 23 verdes + arranque.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** `pytest -q` (render AppTest con ejemplo y vacío); health 200.
+- **Decisión técnica mía:** datos brutos en `st.dataframe` (ese widget ignora bordes; los Styler con cuadrícula solo se ven fieles en `st.table`); índice oculto salvo grupos reales.
