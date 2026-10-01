@@ -94,3 +94,11 @@
 - **IA falló en / corregí:** mi patrón de `edit` volvió a comerse 2 líneas (`tabla_de`, `col_esc`) → reparado con `grep`+lectura antes de cada edición; Total con `ignore_index` perdía marca y sesgaba Reparto → índice "Total" + base sin esa fila.
 - **Cómo lo detecté:** captura con scroll 2500px; `pytest -q`; health 200.
 - **Decisión técnica mía:** congelar de verdad exige selectores frágiles que pueden romper el scroll (desaconsejado); Total no entra en múltiples (sumar % >100% engañaría).
+
+---
+### 2026-10-01 — Rail restaurado: sí estaba congelado
+- **Pedí (resumen):** rail estático como columna, celdas como la maqueta, todo en `main`, anotarlo en PROMPT-LOG.
+- **IA hizo bien:** dudó de su propio diagnóstico y lo comprobó con dos capturas (arriba/abajo): el `1` sale a la misma altura en ambas, luego el `fixed` sí funciona; rail restaurado con fondo transparente; fila Total y celdas verificadas; 23 verdes.
+- **IA falló en / corregí:** mal diagnóstico previo (dije que Streamlit derrotaba el `fixed` sin probarlo) → rectificado con evidencia; el patrón de `edit` volvió a comerse líneas 2 veces → reparado con lectura previa.
+- **Cómo lo detecté:** capturas 05-arriba vs 06-abajo tras scroll de 2500px; `pytest -q`; health 200.
+- **Decisión técnica mía:** si en tu pantalla se sigue moviendo, es caché o deploy sin actualizar (Ctrl+F5 tras el push).
