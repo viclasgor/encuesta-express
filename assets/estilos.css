@@ -41,11 +41,25 @@
 .ee-pie { color: var(--sec); font-size: 0.8rem; margin: 18px 0 8px 0; }
 .ee-pie a { color: var(--linea); }
 
+/* --- Contenedores con key (clases .st-key-* que genera Streamlit al usar
+   key= en st.container; documentado desde 1.39, pero dependiente de versión:
+   tratar como FRÁGIL) --- */
+.st-key-ee_header {
+  background: var(--oscuro); border-radius: 12px; padding: 12px 16px 14px 16px;
+  margin-bottom: 8px;
+}
+.st-key-ee_header .ee-topbar { margin-bottom: 10px; }
+.st-key-ee_footer {
+  position: sticky; bottom: 0;
+  background: var(--oscuro); border-radius: 12px 12px 0 0;
+  padding: 10px 16px 12px 16px; margin-top: 16px;
+}
+
 /* --- Simplificación bajo 768 px: solo título y fórmulas; pie básico.
    (Los widgets nativos no se pueden ocultar selectivamente sin frágiles.) --- */
 @media (max-width: 768px) {
   .ee-lema, .ee-archivo { display: none; }
-  .ee-marco-cols { display: none; }
+  .ee-pie { display: none; }
   .ee-estado span:nth-child(n+3) { display: none; }
 }
 
@@ -148,11 +162,10 @@ table.ee-hoja { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
   font-weight: 700; color: var(--accion); margin-right: 0.5rem;
 }
 
-/* --- Barra de estado inferior --- */
+/* --- Fila de estado (dentro del footer; ya no es fixed) --- */
 .ee-estado {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
-  background: var(--oscuro); color: var(--papel);
-  font-size: 12px; padding: 5px 12px; display: flex; gap: 16px;
+  background: transparent; color: var(--papel);
+  font-size: 12px; padding: 2px 0; display: flex; gap: 16px;
 }
 
 /* FRÁGIL: oculta cabecera/pie de Streamlit (selectores internos). */
