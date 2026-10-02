@@ -17,6 +17,7 @@
 
 ---
 ### 2026-09-30 — Planificación sin código (PROBLEMA, ALCANCE, BACKLOG, AGENTS)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí:** actuar como tech lead, máx 5 preguntas, luego crear docs/PROBLEMA, docs/ALCANCE, docs/BACKLOG, AGENTS.md y PROMPT-LOG sin escribir código, esperando aprobación.
 - **IA hizo bien:** preguntó antes de escribir (CSV, tipos, exportación, cruce, deploy); generó 5 docs alineados a respuestas (UTF-8/coma, tipos 4 salidas, cruce cat×cat y escala×cat sin tests, HTML autónomo, solo local); anotó supuestos S1-S4.
 - **IA falló en / corregí:** pendiente de tu revisión — valida si backlog/incrementos y supuestos te valen antes de implementar.
@@ -25,6 +26,7 @@
 
 ---
 ### 2026-09-30 — Incremento 1 (US-01+US-02) + CSV ejemplo + test tipos + Cloud
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** aprobar orden y S1-S4; crear `data/ejemplo_encuesta.csv` + test detección; empezar Incremento 1; correr tests, arrancar app, preparar Cloud; dejar el log solo con este proyecto.
 - **IA hizo bien:** CSV 8 filas; `src/analysis.py` puro (`cargar_csv`, `detectar_tipo`, `tabla_frecuencias`); `tests/test_analysis.py` (carga, tipos, frecuencias); `app.py` mínimo E2E; `docs/DESPLIEGUE.md`; ALCANCE actualizado (Cloud pasa de FUERA a opción documentada).
 - **IA falló en / corregí:** 1) `pd.to_numeric(list)` devuelve ndarray sin `.notna` → escala caía a categórica; corregido con `pd.Series`. 2) `pip install` cortado por timeout y `python -m streamlit` sin módulo; reinstalado con `python -m pip`. 3) Arranque inicial falló; verificado tras reinstalar (health 200).
@@ -33,6 +35,7 @@
 
 ---
 ### 2026-09-30 — Sesión autónoma Must+Should (US-03→US-17, sin US-01/02 que ya estaban)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** completar Must y Should en orden, 1 commit/historia, sin push; parar solo ante deps nuevas y claves API; chi² con esperadas y aviso; informe final + README.
 - **IA hizo bien:** 13 historias con tests en `src/` (20 tests verdes); deps añadidas solo tras tu OK (`openpyxl==3.1.5`, `fpdf2==2.8.9`, `scipy==1.18.1`); PDF mínimo con DejaVu vendored; supuestos S9–S16 anotados; README reescrito.
 - **IA falló en / corregí:** 1) patrón de `edit` que comía líneas vecinas (3 casos: test mezclado, `tabla_multiple` sin `def`, `col_esc` borrado) → detectado con `grep`/`pytest`, reparado y verificado. 2) `barras_cruce` con índice sin nombre en múltiple (KeyError 'index') → `rename_axis` explícito. 3) fpdf2: cursor tras `multi_cell` (sin espacio) → `new_x/new_y`; cabecera de tabla pedía negrita inexistente → `FontFace(emphasis=None)`. 4) test DT con tolerancia 1e-9 vs redondeo a 3 decimales → tolerancia 1e-3. 5) `cruzables` excluía a `multiple` (US-12 inalcanzable) → incluido.
@@ -41,6 +44,7 @@
 
 ---
 ### 2026-09-30 — Rediseño visual UI (tema, sidebar, 4 pestañas, estado vacío)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** mejorar diseño/usabilidad sin tocar `src/` ni añadir deps; propuesta previa en 10 líneas; 10 puntos (tema, estructura, resumen, informe, gráficos, vacío, tablas, avanzado, CSS, accesibilidad); 1 commit.
 - **IA hizo bien:** `config.toml` (light, acento #0B7285); plantilla Plotly común en `src/plots.py` (solo estilo); sidebar (carga, filtro, % base, tipos); tabs Resumen/Informe/Cruces/Exportar; tarjetas `metric`; containers con borde; ZIP con `zipfile` estándar; totales resaltados; 23 tests verdes.
 - **IA falló en / corregí:** nada en esta tarea; desviación consciente: `% fila/columna` en sidebar (visible siempre con ayuda) en vez de solo en Cruces, por pedirlo el punto 2.
@@ -49,6 +53,7 @@
 
 ---
 ### 2026-09-30 — Quitar aviso de columnas ignoradas
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** al ignorar una columna no mostrar ningún mensaje, solo ignorarla; anotarlo en PROMPT-LOG.
 - **IA hizo bien:** eliminado el `st.info` de Resumen; el resto (sugerencia en tipos, exclusión del informe) intacto.
 - **IA falló en / corregí:** nada.
@@ -57,6 +62,7 @@
 
 ---
 ### 2026-10-01 — Estética hoja de cálculo
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** rediseño estilo hoja (sin copiar marcas), sin tocar `src/` ni añadir deps; diseño previo en 10 líneas; 9 puntos (tema, tablas Styler, barra fx, estructura, gráficos, vacío, CSS, sin letras falsas, accesibilidad); 1 commit.
 - **IA hizo bien:** tema verde hoja `#1E7E34`; `estilo_hoja` con cuadrícula, cabecera, % 1 decimal, Total y cebra; barra `fx P3 · tipo · n`; `st.table` para informe y cruces; gama verde en Plotly; 23 verdes + arranque.
 - **IA falló en / corregí:** nada.
@@ -65,6 +71,7 @@
 
 ---
 ### 2026-10-01 — Rediseño hoja completo (rama diseno-hoja) + capturas Playwright
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** estética hoja genérica en 1 segundo, sin marcas MS, sin tocar `src/` ni deps; diseño previo en 10 líneas; marco sutil oculto <768px; tablas como HTML propio `.ee-hoja` (no Styler); Playwright solo dev en `requirements-dev.txt`; capturas de inicio e informe; Streamlit fijado; frágiles comentados.
 - **IA hizo bien:** 5 commits pequeños (marco, inicio, estado, tablas, barras+inicio); marco A–H + rail, `toolbarMode minimal`, tabs hoja, barra de estado real, barra `fx Pn`; `requirements-dev.txt` con `playwright==1.63.0` (nunca en `requirements.txt`); Streamlit ya fijado en `1.64.0`; 23 verdes.
 - **IA falló en / corregí:** 1) barras azules: `colorway` no se impone a trazas ya creadas por `px` → `marker_color`/`color_discrete_sequence` explícitos (lo vi en captura). 2) markdown dentro de `st.html` se veía literal (`###`, `**`) → etiquetas HTML (lo vi en captura). 3) captura inicial en blanco por arranque lento → espera explícita al botón. 4) servidor huérfano ocupando el puerto falseó una tanda de capturas → limpieza de procesos y repetición.
@@ -73,6 +80,7 @@
 
 ---
 ### 2026-10-01 — Rediseño según maqueta (rama diseno-hoja) + capturas Playwright
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** clonar maqueta solo visual, sin `src/` ni deps, en `diseno-hoja`; paleta dada una vez; franja+logo, fxbar A1, marco sutil <768px, héroe celda, preview P3 con Reparto, pasos, tabs Inicio, estado verde; CSS `.ee-*`; botones con alternativa si piden frágiles; Streamlit fijado; capturas y diferencias; tests verdes, commits pequeños.
 - **IA hizo bien:** 3 commits (tema+CSS, héroe+preview+tabs+Reparto, barra A1); `.ee-hoja` oscura con coma decimal y Reparto en orden verde-azul-coral-amarillo; `PALETA` reutilizada en plots; `requirements-dev.txt` intacto; Streamlit ya en `1.64.0`; 23 verdes; capturas inicio+informe.
 - **IA falló en / corregí:** faltaba la barra A1 y el Reparto en preview (visto en captura, añadido); markdown en `st.html` ya venía corregido de antes.
@@ -81,6 +89,7 @@
 
 ---
 ### 2026-10-01 — Fuera sidebar + página completa estilo maqueta
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** quitar la sidebar inútil y acercar la web a la maqueta; anotarlo en PROMPT-LOG.
 - **IA hizo bien:** sidebar eliminada; filtro+tipos a desplegable global, `% fila/columna` a Cruces (donde se usa); página a ancho completo con rail de filas visible; 23 verdes + arranque + captura.
 - **IA falló en / corregí:** nada.
@@ -89,6 +98,7 @@
 
 ---
 ### 2026-10-01 — Rail estatico imposible + fila Total estilo maqueta
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** rail de filas estático como columna congelada, celdas como la maqueta, todo en `main`, anotarlo en PROMPT-LOG.
 - **IA hizo bien:** verificado en captura que el rail scrolleaba (fixed derrotado por transform de Streamlit, sticky por overflow); rail eliminado (así roto parecía bug) y letras como cabecera estática; fila Total solo en pantalla (CSV limpio) con Reparto sin romper; celdas más altas; 23 verdes + arranque + captura con scroll.
 - **IA falló en / corregí:** mi patrón de `edit` volvió a comerse 2 líneas (`tabla_de`, `col_esc`) → reparado con `grep`+lectura antes de cada edición; Total con `ignore_index` perdía marca y sesgaba Reparto → índice "Total" + base sin esa fila.
@@ -97,6 +107,7 @@
 
 ---
 ### 2026-10-01 — Rail restaurado: sí estaba congelado
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** rail estático como columna, celdas como la maqueta, todo en `main`, anotarlo en PROMPT-LOG.
 - **IA hizo bien:** dudó de su propio diagnóstico y lo comprobó con dos capturas (arriba/abajo): el `1` sale a la misma altura en ambas, luego el `fixed` sí funciona; rail restaurado con fondo transparente; fila Total y celdas verificadas; 23 verdes.
 - **IA falló en / corregí:** mal diagnóstico previo (dije que Streamlit derrotaba el `fixed` sin probarlo) → rectificado con evidencia; el patrón de `edit` volvió a comerse líneas 2 veces → reparado con lectura previa.
@@ -105,6 +116,7 @@
 
 ---
 ### 2026-10-01 — Cuadrícula de fondo en el contenedor de scroll (opción B)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** efecto `.canvas` de la maqueta (no existe en el repo): celdas finas detrás de todo, tarjetas blancas encima; antes diagnosticar DOM (contenedor scroll, capas sólidas, por qué no se veía); arreglo con grid en scroll container, `local`, 34px/12,5%, `#D3E0D0` sobre `#F7FAF3`; transparentar intermedias; tarjetas blancas; CSS un archivo; capturas 1280/390 con scroll; tests + commit; elegí opción B (mantener oscuro).
 - **IA hizo bien:** diagnóstico real (scroll=`[data-testid="stMain"]`, sólidos en `body`+`.stApp`); grid adaptado al oscuro (líneas `#D3E0D0` al 12% sobre el verde, tarjetas oscuras sólidas); selector frágil comentado; 23 verdes.
 - **IA falló en / corregí:** el fallo anterior era mío (grid en `body`, enterrado bajo `.stApp`); nada nuevo esta vez.
@@ -114,6 +126,7 @@
 
 ---
 ### 2026-10-01 — Licencia MIT
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** añadir una MIT License al repo.
 - **IA hizo bien:** archivo `LICENSE` con texto MIT estándar, copyright 2026 a nombre de tu identidad git (viclasgor).
 - **IA falló en / corregí:** nada.
@@ -122,6 +135,7 @@
 
 ---
 ### 2026-10-01 — Regla PROMPT-LOG automático (AGENTS.md)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** cada cambio quede en PROMPT-LOG sin pedirlo, antes del commit; añadir la regla a AGENTS.md.
 - **IA hizo bien:** regla 7 reescrita (registro por tarea, antes del commit, con errores y detección); aplicada a esta misma tarea.
 - **IA falló en / corregí:** nada.
@@ -130,6 +144,7 @@
 
 ---
 ### 2026-10-01 — Header y footer de app real (menús, toolbar, +, stats)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** header con menús reales/archivo/fx dinámico/toolbar/estado y footer con +/stats/enlaces/privacidad; solo visual, sin `src/` ni deps; 10 líneas previas; CSS `.ee-*`; responsive 768; capturas 1280/390; tests y commits pequeños.
 - **IA hizo bien:** popovers Archivo/Datos/Informe con acciones reales + diálogo Ayuda; `+` con uploader; stats con funciones existentes (min/max de `distribucion`, moda de `frecuencias`); calidad omitida (sin función en `src/`); placeholders GitHub/README; privacidad con redacción verificada (solo `to_csv` a string en memoria); 23 verdes.
 - **IA falló en / corregí:** defs usadas antes de definirse (`ayuda_dialog`, `_html_doc`) + popovers que crujían sin datos → reorden + guardas; escala mostraba `2.0` → enteros en el formateo visual.
@@ -138,7 +153,17 @@
 - **No verificado:** pantalla real del usuario ni Cloud con esto.
 
 ---
+### 2026-10-02 — Pulido pre-entrega (robustez + credibilidad + REFLEXION)
+- **Pedí (resumen):** lista priorizada (bloqueante/credibilidad/robustez/nivel); hacer ya todo lo delegable.
+- **IA hizo bien:** Sniffer+latin-1 con test; topes 5MB/50k con mensajes; `@st.cache_data` en carga/tablas/cruces/chi² (27 verdes); US-18 palabras con test; xlsx exportado con test; logging de carga/export; placeholders→URLs reales; README con URL Cloud y sin "pendiente"; modelo por sesión (18/18); `REFLEXION.md` en 1-2 páginas.
+- **IA falló en / corregí:** import duplicado y ancla de edit (reparados con lectura); carácter cirílico colado en REFLEXION (releído y corregido).
+- **Cómo lo detecté:** `pytest -q`; `py_compile`; health 200; render AppTest.
+- **Decisión técnica mía:** caché en `src/` (trade-off con pureza, endosado por la revisión); US-19 LLM pendiente (necesita clave + dep `openai`); botón ejemplo ya en primer plano (héroe); CSV a string en memoria, nada a disco.
+- **No verificado:** Cloud con esto; URL Cloud supuesta (encuesta-express.streamlit.app) pendiente de tu confirmación.
+
+---
 ### 2026-10-01 — PDF: error visible en vez de página tumbada
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** el PDF fallaba en Cloud sin reproducirse en local; mostrar el error en la app.
 - **IA hizo bien:** `try/except` solo alrededor de `generar_pdf` en Exportar: si falla, aviso + `traceback` visible (Cloud redacta los no capturados); sin cambios en éxito; 24 verdes.
 - **IA falló en / corregí:** nada nuevo; el TypeError original sigue sin reproducirse (ejemplo, cruces, vacíos y fuzzing con emojis/150 categorías/BOM generan bien).
@@ -148,6 +173,7 @@
 
 ---
 ### 2026-10-01 — PDF con gráficos dibujados (sin Kaleido)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Pedí (resumen):** explicar el PDF actual en 5 líneas; dibujar barras con fpdf2 (H con n y %, V para escala, apiladas/agrupadas si caben o solo tabla); título+tabla+gráfico por pregunta sin cortes; portada; TTF del repo; sin Kaleido/navegador/matplotlib ni tocar cálculos; módulo separado + test; botón existente; Cloud sin binarios.
 - **IA hizo bien:** `src/pdf_report.py` (hbar/vbar/stacked con paleta, etiquetas truncadas, salto de página previo); `export_pdf` acepta `grafico`+`cruce`; botón genera el nuevo PDF; test con ejemplo (8 páginas, rects con los 4 colores verificados en streams); 24 verdes + arranque.
 - **IA falló en / corregí:** umbral de tamaño del test por 44 bytes → 15_000; búsqueda de color con decimales exactos → regex de fills.
@@ -157,4 +183,5 @@
 
 ---
 ### 2026-10-01 — Header/footer: remates (contraste gutter, enteros)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
 - **Seguimiento de la entrada anterior:** la cebra pisaba el fondo del gutter (ilegible) y la escala mostraba `2.0`; ambos detectados en captura 390, corregidos en CSS/formateo y verificados por DOM (`getComputedStyle`) y captura; 23 verdes.

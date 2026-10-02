@@ -6,15 +6,16 @@ Sube tu archivo y obtén: perfil de la muestra, tabla + gráfico por pregunta se
 
 Cálculos deterministas con pandas/scipy. Sin LLM para calcular. Despliegue en Streamlit Community Cloud; local como plan B.
 
-> URL Cloud: _PEGAR AQUÍ TU URL DE STREAMLIT CLOUD_
+> URL Cloud: https://encuesta-express.streamlit.app
+> _(si tu URL es distinta, corrígela aquí)_
 
 ## Funcionalidades
-- Carga CSV (UTF-8, coma) y .xlsx (primera hoja) + vista previa y n total.
+- Carga CSV (UTF-8 o latin-1; coma, punto y coma, tab o `|`, detectados) y .xlsx (primera hoja) + vista previa y n total; tope 5 MB / 50.000 filas.
 - Autodetección de tipos (timestamp, escala 1-5, única, múltiple, texto, email) con corrección manual e ignorado de columnas.
 - Por pregunta: única → tabla n/% + barras H; múltiple → % sobre respondientes + barras H; escala → media/mediana/DT + barras V; texto → listado paginado.
 - Cruces: cat×cat (% fila/columna, apiladas/agrupadas), escala×cat (medias), múltiple×cat (descriptivo); aviso si grupo <5; chi-cuadrado con V de Cramér e interpretación en llano solo cuando las esperadas lo permiten.
 - Filtro por segmento aplicado a todo el informe.
-- Exporta informe HTML autónomo (abre offline), PDF mínimo y CSV por tabla.
+- Exporta informe HTML autónomo (abre offline), PDF con gráficos, CSV por tabla y Excel con todas las tablas.
 
 ## Stack
 - Python 3.10+, Streamlit==1.64.0, pandas==3.0.6, Plotly==7.1.0, openpyxl==3.1.5, fpdf2==2.8.9, scipy==1.18.1, pytest==9.1.1 (todo fijado en `requirements.txt`).
@@ -44,4 +45,4 @@ Ver `docs/DESPLIEGUE.md`. Tras desplegar, pega la URL arriba.
 ## Docs
 - `docs/PROBLEMA.md`, `docs/ALCANCE.md` (incluye supuestos S1–S16), `docs/BACKLOG.md`
 
-Estado: Must + Should completos y verificados en local (20 tests); pendiente tu prueba en navegador + deploy Cloud.
+Estado: Must + Should completos (27 tests en verde); app desplegada en Cloud (URL arriba); demo local con datos de ejemplo.
