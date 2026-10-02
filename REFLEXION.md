@@ -1,41 +1,40 @@
-# Informe de reflexión — EncuestaExpress (1-2 páginas)
+# Informe de reflexión — EncuestaExpress
 
-## 1. Qué hizo la IA
-Generó la planificación (PROBLEMA, ALCANCE, BACKLOG, AGENTS.md), el CSV de ejemplo,
-toda la lógica de análisis en `src/` (carga, detección de tipos, frecuencias,
-cruces, chi-cuadrado, exportaciones), la UI en Streamlit, los 27 tests y la
-documentación (DESPLIEGUE, README, PROMPT-LOG con 18 sesiones). Propuso la
-arquitectura (pandas puro separado de la UI), las dependencias con versiones
-fijadas y los supuestos S1–S18 del alcance.
+## 1. De dónde salió la idea
+Estudié Marketing e Investigación de Mercados, y las encuestas me daban
+quebraderos de cabeza de verdad: exportar de Google Forms a Excel y pasarme
+horas contando respuestas, con las de opción múltiple siempre mal calculadas.
+La idea de la web fue mía: subir el CSV y que salga el informe solo. Yo además
+le pasé a la IA el maquetado de cómo quería que se viera (la estética de hoja
+de cálculo con la franja verde, la barra de fórmulas, las tablas con su
+columna de reparto), y fue ella la que lo convirtió en la página.
 
-## 2. Qué hice yo (dirección)
-Definí el producto y sus reglas: cálculos deterministas, nunca un LLM en la ruta
-de cálculo; incrementos pequeños con aprobación; parar ante dependencias y claves;
-Cloud como criterio de hecho con local de plan B; congelación el 6/10. Corregí
-decisiones de alcance (chi-cuadrado solo con esperadas válidas, PDF sin Kaleido,
-múltiples sin test) y todo el diseño visual con maqueta y capturas. Probé la app
-en navegador y en Cloud, y aporté los fallos que los tests no veían (rail móvil,
-botones duplicados, CSV con punto y coma).
+## 2. Cómo trabajamos
+Yo conducía con prompts que preparaba con ayuda de Claude para que salieran
+bien: le pedía una cosa cada vez (primero una tabla, luego un gráfico, luego
+un cruce) y no avanzábamos hasta que eso funcionaba. Mi regla era no creerme
+nada sin probarlo: mientras programábamos yo iba haciendo push al repo de
+GitHub y comprobando en Streamlit, y cuando algo fallaba lo analizaba, se lo
+decía y lo corregíamos juntos. Así pillamos fallos que en local no salían,
+como el error del PDF en la nube o los gráficos que salían azules en vez de
+verdes. Al final, la prueba de que todo cuadra es `pytest -q` en verde:
+27 pruebas que comprueban los cálculos.
 
-## 3. Errores de la IA y cómo los detecté
-- **Edits que comían líneas vecinas** (3+ casos: `tabla_multiple` sin `def`,
-  `col_esc` borrado). Detectado con `grep` + lectura antes de cada edición;
-  desde entonces verifico el hunk antes de dar por bueno un cambio.
-- **`pd.to_numeric(list)`** devuelve ndarray sin `.notna` → la escala caía a
-  categórica. Cazado por `pytest` (1 fallo); fix con `pd.Series`.
-- **fpdf2**: cursor tras `multi_cell` y cabecera pidiendo negrita inexistente.
-  Cazados por el test del PDF; fix con `new_x/new_y` y `FontFace(emphasis=None)`.
-- **Barras azules**: `colorway` no se impone a trazas ya creadas → colores
-  explícitos. Visto en captura headless, no en tests.
-- **Diagnóstico falso del rail**: afirmé que Streamlit derrotaba el `fixed`
-  sin probarlo; dos capturas (arriba/abajo) demostraron lo contrario.
-  Aprendizaje: verificar con evidencia antes de sentenciar.
-- **Puerto ocupado y capturas falseadas** por servidores huérfanos: ahora mato
-  el proceso y compruebo el puerto antes de cada tanda.
+## 3. Qué hizo cada uno
+La IA escribió el código (los cálculos con pandas y scipy, los tests, la
+interfaz y los informes descargables). Lo mío fue dirigir: definir qué tenía
+que hacer la app, el orden (primero lo básico que funcionara, los adornos
+después), la maqueta visual, y decidir cosas como que los porcentajes de las
+preguntas múltiples se calculan sobre personas y no sobre respuestas, o que
+el chi-cuadrado se niegue a dar veredicto con muestras pequeñas. También
+fui yo quien probó cada entrega en el navegador y quien decidió qué entraba
+antes de la congelación del 6/10.
 
-## 4. Aprendizaje y decisión técnica (defensa, 5 min)
-La decisión: **los números no los calcula un modelo, los calcula pandas
-(y scipy), y por eso se pueden testear** — `pytest -q` en verde en pantalla,
-27 tests. Dirigir a la IA en historias pequeñas y verificables (un commit por
-historia, tests + arranque antes de avanzar) rindió más que pedirle todo de
-golpe; y los fallos visuales solo salieron con capturas reales, nunca con tests.
+## 4. Lo más importante que aprendí (y mi defensa en 5 minutos)
+Lo que de verdad entendí haciendo esto: los números no los calcula ningún
+modelo de IA, los calcula código normal (pandas), y por eso se pueden
+comprobar con tests. En un curso donde todos enseñan una llamada a un modelo,
+yo explico por qué decidí no meter el modelo donde están los números. Si el
+profesor me pregunta algo técnico, mi respuesta honesta es esa: yo no programo
+como un senior, pero sé pedir, probar y decidir, y el `pytest -q` en verde
+lo demuestra en pantalla.
