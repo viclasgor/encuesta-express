@@ -153,6 +153,16 @@
 - **No verificado:** pantalla real del usuario ni Cloud con esto.
 
 ---
+### 2026-10-02 — REFLEXION reescrita (técnica IA, voz alumno, sin 6/10)
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
+- **Pedí (resumen):** quitar lo del 6/10, parte IA más técnica, tomar informe de un compañero como referencia sin calcar.
+- **IA hizo bien:** estructura en 4 bloques como la referencia; errores concretos con detección y aprendizaje; decisión pandas-vs-modelo como cierre defendible.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** relectura comparada con la referencia.
+- **Decisión técnica mía:** ninguna de código.
+- **No verificado:** que el tono te sirva ante el profesor (revísalo en voz alta).
+
+---
 ### 2026-10-02 — Pulido pre-entrega (robustez + credibilidad + REFLEXION)
 - **Pedí (resumen):** lista priorizada (bloqueante/credibilidad/robustez/nivel); hacer ya todo lo delegable.
 - **IA hizo bien:** Sniffer+latin-1 con test; topes 5MB/50k con mensajes; `@st.cache_data` en carga/tablas/cruces/chi² (27 verdes); US-18 palabras con test; xlsx exportado con test; logging de carga/export; placeholders→URLs reales; README con URL Cloud y sin "pendiente"; modelo por sesión (18/18); `REFLEXION.md` en 1-2 páginas.
