@@ -1,14 +1,57 @@
 """Logica pura de analisis (sin Streamlit). Testeable con pytest."""
 from __future__ import annotations
+import csv
+import io
 import re
 import unicodedata
+from pathlib import Path
 import pandas as pd
+from streamlit import cache_data
+
+SEPS = [",", ";", "\t", "|"]
+
+
+def _decodificar(raw: bytes) -> tuple[str, str]:
+    try:
+        return raw.decode("utf-8"), "utf-8"
+    except UnicodeDecodeError:
+        return raw.decode("latin-1"), "latin-1"
+
+
+def _detectar_sep(muestra: str) -> str:
+    try:
+        d = csv.Sniffer().sniff(muestra, delimiters="".join(SEPS))
+        if d.delimiter in SEPS:
+            return d.delimiter
+    except Exception:
+        pass
+    return ","
+
+
+@cache_data(show_spinner=False)
+def leer_csv_bytes(data: bytes) -> tuple[pd.DataFrame, dict]:
+    """CSV desde bytes: detecta encoding (utf-8, cae a latin-1) y separador
+    (`,`, `;`, tab o `|`). Todo a texto para no romper con vacíos ni rangos."""
+    texto, enc = _decodificar(data)
+    texto = texto.lstrip("\ufeff")
+    sep = _detectar_sep(texto[:20000])
+    df = pd.read_csv(io.StringIO(texto), sep=sep, dtype=str, keep_default_na=False)
+    df.columns = [str(c).strip() for c in df.columns]
+    return df, {"sep": sep, "encoding": enc}
 
 
 def cargar_csv(path_o_buffer) -> pd.DataFrame:
-    # CSV estandar Google Forms: UTF-8, coma, primera fila cabecera.
-    # Todo se lee como texto para no romper con vacios ni rangos tipo "10-20 €".
-    return pd.read_csv(path_o_buffer, encoding="utf-8", sep=",", dtype=str, keep_default_na=False)
+    # Ruta o archivo subido; devuelve solo el DataFrame (info en leer_csv_bytes).
+    if hasattr(path_o_buffer, "read"):
+        data = path_o_buffer.read()
+        try:
+            path_o_buffer.seek(0)
+        except Exception:
+            pass
+        df, _ = leer_csv_bytes(bytes(data))
+        return df
+    df, _ = leer_csv_bytes(Path(path_o_buffer).read_bytes())
+    return df
 
 
 def _es_columna_email(nombre: str) -> bool:
@@ -89,6 +132,7 @@ def detectar_tipo(nombre: str, serie: pd.Series) -> str:
     return "categorica"
 
 
+@cache_data(show_spinner=False)
 def detectar_tipos(df: pd.DataFrame) -> dict[str, str]:
     return {col: detectar_tipo(col, df[col]) for col in df.columns}
 
@@ -98,6 +142,7 @@ def sugerir_ignorar(tipo: str) -> bool:
     return tipo in ("temporal", "email", "id")
 
 
+@cache_data(show_spinner=False)
 def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:
     """Tabla n y % sobre n valido. Vacios excluidos del % (pero contados fuera)."""
     no_vacios = serie[serie.astype(str).str.strip() != ""]
@@ -111,6 +156,7 @@ def tabla_frecuencias(serie: pd.Series) -> pd.DataFrame:
     return tabla
 
 
+@cache_data(show_spinner=False)
 def resumen_escala(serie: pd.Series) -> dict:
     """Media, mediana y DT (muestral) sobre valores 1-5; vacios excluidos."""
     nums = pd.to_numeric(serie[serie.astype(str).str.strip() != ""], errors="coerce").dropna()
@@ -123,6 +169,7 @@ def resumen_escala(serie: pd.Series) -> dict:
     }
 
 
+@cache_data(show_spinner=False)
 def distribucion_escala(serie: pd.Series) -> pd.DataFrame:
     """Frecuencia de cada valor de la escala sobre n valido."""
     nums = pd.to_numeric(serie[serie.astype(str).str.strip() != ""], errors="coerce").dropna()
@@ -150,6 +197,7 @@ def perfil_muestra(df: pd.DataFrame) -> dict:
     }
 
 
+@cache_data(show_spinner=False)
 def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
     """Menciones por opcion; % sobre nº de respondientes (puede sumar >100%)."""
     resp = serie.astype(str).str.strip()
@@ -168,6 +216,7 @@ def tabla_multiple(serie: pd.Series, sep: str = ", ") -> pd.DataFrame:
     return tabla
 
 
+@cache_data(show_spinner=False)
 def cruce_cat_cat(s_filas: pd.Series, s_columnas: pd.Series, base: str = "fila") -> dict:
     """Tabla cruzada n + % con totales. Vacios excluidos (se informa cuantos)."""
     f = s_filas.astype(str).str.strip()
@@ -185,6 +234,7 @@ def cruce_cat_cat(s_filas: pd.Series, s_columnas: pd.Series, base: str = "fila")
     return {"n": n, "pct": pct, "excluidos": excluidos, "base": base}
 
 
+@cache_data(show_spinner=False)
 def cruce_escala_cat(s_escala: pd.Series, s_grupo: pd.Series) -> dict:
     """Media, DT y n de la escala por cada grupo. Vacios excluidos."""
     e = pd.to_numeric(s_escala.astype(str).str.strip(), errors="coerce")
@@ -199,6 +249,7 @@ def cruce_escala_cat(s_escala: pd.Series, s_grupo: pd.Series) -> dict:
     return {"tabla": tabla, "excluidos": excluidos}
 
 
+@cache_data(show_spinner=False)
 def cruce_multiple_cat(s_multiple: pd.Series, s_grupo: pd.Series, sep: str = ", ") -> dict:
     """Múltiple x categórica: por opción y grupo, menciones y % sobre
     respondientes del grupo. Solo descriptivo, sin test (S5)."""
@@ -247,3 +298,25 @@ def cargar_excel(path_o_buffer, hoja: int | str = 0) -> pd.DataFrame:
 
     df.columns = [str(c).strip() for c in df.columns]
     return df.apply(lambda col: col.map(a_texto)).astype(str)
+
+
+STOP_ES = frozenset(
+    "el la los las un una unos unas de del en y a ante con por para como más mas "
+    "que qué es son hay fue eran sea sean esto esta estos estas ese esa esos esas "
+    "aquel aquello mi mis tu tus su sus nuestro nuestra al o u pero sino sinoque "
+    "muy tan tanto tanta sin sobre entre hasta desde donde cuando cual cuales "
+    "quien quienes porque pues todo toda todos todas mucho mucha muchos muchas "
+    "otro otra otros otras mismo misma ese sí no ni ya le les lo me te se nos os "
+    "este".split())
+
+
+def frecuencia_palabras(textos: list[str], top: int = 15) -> pd.DataFrame:
+    """Top de palabras en texto abierto (minúsculas, sin stopwords, len>=3)."""
+    from collections import Counter
+    c: Counter[str] = Counter()
+    for t in textos:
+        for w in re.findall(r"[a-záéíóúñü]+", str(t).lower()):
+            if len(w) >= 3 and w not in STOP_ES:
+                c[w] += 1
+    top_n = c.most_common(top)
+    return pd.DataFrame(top_n, columns=["palabra", "n"])

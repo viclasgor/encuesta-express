@@ -4,10 +4,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
+from streamlit import cache_data
 
 ALFA = 0.05
 
 
+@cache_data(show_spinner=False)
 def chi_cuadrado_cat(tabla_n: pd.DataFrame, alfa: float = ALFA) -> dict:
     """tabla_n: conteos SIN totales. Devuelve stats + veredicto en llano,
     o aplicable=False con el motivo (S7)."""

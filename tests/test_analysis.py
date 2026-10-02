@@ -3,7 +3,7 @@ from src.analysis import (
     cargar_csv, cargar_excel, detectar_tipos, sugerir_ignorar, resumen_escala,
     distribucion_escala, listar_texto, perfil_muestra,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
-    cruce_multiple_cat, aplicar_filtro,
+    cruce_multiple_cat, aplicar_filtro, leer_csv_bytes, frecuencia_palabras,
 )
 
 CSV = "data/ejemplo_encuesta.csv"
@@ -129,6 +129,22 @@ def test_filtro_global_por_valor():
     assert len(aplicar_filtro(df, "Rango de edad", "Todos")) == 8
     assert len(aplicar_filtro(df, None, None)) == 8
     assert len(aplicar_filtro(df, "Rango de edad", "18-24")) == 2
+
+
+def test_sniffer_punto_y_coma_y_latin1():
+    raw = "a;b\nc;d\n1;2\n".encode("latin-1")
+    df, info = leer_csv_bytes("a\xe9;b\n1;2\n".encode("latin-1"))
+    assert info["sep"] == ";" and info["encoding"] == "latin-1"
+    assert list(df.columns) == ["aé", "b"] and len(df) == 1
+    df2, info2 = leer_csv_bytes(raw)
+    assert info2["sep"] == ";"
+
+
+def test_frecuencia_palabras_top_y_stopwords():
+    df = cargar_csv(CSV)
+    w = frecuencia_palabras(listar_texto(df["¿Qué mejorarías?"]))
+    assert "más" not in set(w["palabra"]) and "precios" in set(w["palabra"])
+    assert w["n"].sum() == 11
 
 
 def test_id_respuesta_y_participante_se_detectan_como_id():

@@ -1,7 +1,7 @@
 from datetime import date
 from src.analysis import cargar_csv, tabla_frecuencias
 from src.plots import barras_horizontales
-from src.export_html import generar_informe_html, tabla_a_csv
+from src.export_html import generar_informe_html, tabla_a_csv, tablas_a_xlsx
 
 CSV = "data/ejemplo_encuesta.csv"
 
@@ -34,3 +34,15 @@ def test_csv_de_tabla_con_n_y_pct():
     assert texto.splitlines()[0] == "categoria,n,pct"
     de_vuelta = pd.read_csv(io.StringIO(texto))
     assert de_vuelta["n"].sum() == 8
+
+
+def test_xlsx_con_hojas_recuperables():
+    import io
+    import pandas as pd
+    df = cargar_csv(CSV)
+    data = tablas_a_xlsx({"Edades: 1/2": tabla_frecuencias(df["Rango de edad"]),
+                          "Texto? *[]": pd.DataFrame({"respuesta": ["hola"]})})
+    assert data[:4] == b"PK\x03\x04"  # zip = xlsx
+    de_vuelta = pd.read_excel(io.BytesIO(data), sheet_name=None)
+    assert de_vuelta["Edades_ 1_2"]["n"].sum() == 8
+    assert list(de_vuelta["Texto_ ___"].columns) == ["respuesta"]

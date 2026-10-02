@@ -1,7 +1,10 @@
 """Informe HTML autonomo (sin Streamlit dentro). Plotly va embebido (S4/S13)."""
 from __future__ import annotations
 import html as _html
+import io
+import re
 
+import pandas as pd
 from plotly.io import to_html
 from plotly.offline import get_plotlyjs
 
@@ -14,10 +17,26 @@ def _fig_div(fig) -> str:
 
 def tabla_a_csv(tabla) -> str:
     """Una tabla del informe a texto CSV (coma, sin índice)."""
-    import pandas as pd
     if not isinstance(tabla, pd.DataFrame):
         tabla = pd.DataFrame(tabla)
     return tabla.to_csv(index=False)
+
+
+def tablas_a_xlsx(tablas: dict[str, pd.DataFrame]) -> bytes:
+    """Todas las tablas del informe en un .xlsx (una hoja por tabla).
+    Usa openpyxl, ya fijado en requirements (S18)."""
+    buf = io.BytesIO()
+    usadas: set[str] = set()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        for nombre, t in tablas.items():
+            hoja = re.sub(r'[:/\\?*\[\]]', "_", str(nombre))[:31] or "hoja"
+            base, k = hoja, 2
+            while hoja in usadas:
+                hoja = f"{base[:28]}_{k}"
+                k += 1
+            usadas.add(hoja)
+            t.to_excel(w, sheet_name=hoja, index=False)
+    return buf.getvalue()
 
 
 def generar_informe_html(titulo: str, fecha: str, n_total: int,
