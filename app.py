@@ -1,6 +1,8 @@
 """EncuestaExpress - informe automatico de encuestas Google Forms (calculos en src/)."""
 import io
+import logging
 import re
+import time
 import zipfile
 from datetime import date
 from html import escape as _esc
@@ -9,13 +11,13 @@ import streamlit as st
 import pandas as pd
 from src.analysis import (
     cargar_csv, cargar_excel, detectar_tipos, sugerir_ignorar, resumen_escala,
-    distribucion_escala, listar_texto, perfil_muestra,
+    distribucion_escala, listar_texto, perfil_muestra, frecuencia_palabras,
     tabla_frecuencias, tabla_multiple, cruce_cat_cat, cruce_escala_cat,
-    cruce_multiple_cat, aplicar_filtro,
+    cruce_multiple_cat, aplicar_filtro, leer_csv_bytes,
 )
 from src.plots import (barras_horizontales, barras_verticales, barras_cruce,
                        barras_medias, PALETA)
-from src.export_html import generar_informe_html, tabla_a_csv
+from src.export_html import generar_informe_html, tabla_a_csv, tablas_a_xlsx
 from src.export_pdf import generar_pdf
 from src.chi2 import chi_cuadrado_cat
 
@@ -23,8 +25,13 @@ TIPOS = ["categorica", "multiple", "escala", "texto", "temporal", "email", "id",
 ETIQUETAS_TIPO = {"categorica": "Opción única", "multiple": "Casillas múltiples",
                   "escala": "Escala 1–5", "texto": "Texto abierto"}
 SERIES = PALETA["gama"]  # misma paleta que los graficos: verde, azul, coral, amarillo
-GITHUB_URL = "https://github.com/TU_USUARIO/TU_REPO"  # TODO: rellenar (ver informe)
-README_URL = "https://github.com/TU_USUARIO/TU_REPO#readme"  # TODO: rellenar
+GITHUB_URL = "https://github.com/viclasgor/encuesta-express"
+README_URL = "https://github.com/viclasgor/encuesta-express#readme"
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+_log = logging.getLogger("encuestaexpress")
+
+MAX_MB, MAX_FILAS = 5, 50_000
 
 st.set_page_config(page_title="EncuestaExpress", layout="wide",
                    page_icon="📊",
@@ -136,13 +143,32 @@ usa_ejemplo = bool(st.session_state.get("usar_ejemplo"))
 df = None
 if archivo is not None:
     try:
+        if len(archivo.getvalue()) > MAX_MB * 1024 * 1024:
+            st.error(f"Archivo demasiado grande (límite {MAX_MB} MB). "
+                     "Parte la encuesta o filtra filas antes de subirla.")
+            st.stop()
+        t0 = time.perf_counter()
         if str(archivo.name).lower().endswith(".xlsx"):
             df = cargar_excel(archivo)
+            info = {"formato": "xlsx"}
         else:
-            df = cargar_csv(archivo)
+            df, info = leer_csv_bytes(archivo.getvalue())
+        _log.info("carga %s: %d filas x %d cols en %.2fs %s",
+                  archivo.name, len(df), len(df.columns),
+                  time.perf_counter() - t0, info)
+        if len(df) == 0 or len(df.columns) == 0:
+            st.error("El archivo no tiene datos (vacío o sin cabecera).")
+            st.stop()
+        if len(df) > MAX_FILAS:
+            st.error(f"Demasiadas filas ({len(df)} > {MAX_FILAS}). "
+                     "Filtra antes de subirlo.")
+            st.stop()
+        if len(df.columns) == 1:
+            st.warning("Solo hay una columna: revisa que el separador sea coma, "
+                       "punto y coma o tabulación.")
     except Exception as e:
         st.error(f"No pude leer el archivo ({_esc(str(archivo.name))}). "
-                 "Usa .csv (UTF-8, comas) o .xlsx con la primera fila de preguntas. "
+                 "Usa .csv (UTF-8 o latin-1) o .xlsx con la primera fila de preguntas. "
                  f"Detalle: {e}")
 elif usa_ejemplo:
     df = cargar_csv("data/ejemplo_encuesta.csv")
@@ -401,6 +427,12 @@ def mostrar_pregunta(col: str, tipo: str) -> None:
         if tipo == "texto":
             respuestas = listar_texto(df[col])
             st.write(f"{len(respuestas)} respuestas (de {len(df)} totales, resto vacías). Sin gráfico.")
+            top = frecuencia_palabras(respuestas)
+            if len(top):
+                st.caption("Palabras más frecuentes")
+                st.plotly_chart(barras_horizontales(
+                    top.rename(columns={"palabra": "categoria"})), width="stretch",
+                    key=f"chart_{slug}_palabras")
             por_pag, n_pag = 10, 1
             if len(respuestas) > por_pag:
                 n_pag = st.number_input("Página", min_value=1,
@@ -640,6 +672,13 @@ with tab_exportar:
                 z.writestr(f"{slug_de(c)}.csv", tabla_a_csv(tabla_de(df, c, tipos_final[c])))
         st.download_button("Descargar todas las tablas (ZIP)", buf.getvalue(),
                            "tablas_encuestaexpress.zip", "application/zip")
+        t0x = time.perf_counter()
+        xlsx = tablas_a_xlsx({c: tabla_de(df, c, tipos_final[c]) for c in analizables})
+        _log.info("xlsx %d tablas, %d bytes en %.2fs", len(analizables), len(xlsx),
+                  time.perf_counter() - t0x)
+        st.download_button("Descargar Excel (todas las tablas)", xlsx,
+                           "tablas_encuestaexpress.xlsx",
+                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 with tab_mas:
     st.markdown("### Subir otro archivo")
