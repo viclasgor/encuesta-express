@@ -163,6 +163,15 @@
 - **No verificado:** que el tono te sirva ante el profesor (revísalo en voz alta).
 
 ---
+### 2026-10-06 — Capturas al repo y README
+- **Modelo/herramienta:** Muse Spark 1.3 Free (agente OpenCode).
+- **Pedí (resumen):** añadir 2 capturas al repo.
+- **IA hizo bien:** identificadas (inicio/informe), movidas a `docs/capturas/`, sección Capturas en README, carpeta temporal eliminada.
+- **IA falló en / corregí:** nada.
+- **Cómo lo detecté:** lectura visual de ambas antes de moverlas.
+- **Decisión técnica mía:** ninguna.
+
+---
 ### 2026-10-02 — Pulido pre-entrega (robustez + credibilidad + REFLEXION)
 - **Pedí (resumen):** lista priorizada (bloqueante/credibilidad/robustez/nivel); hacer ya todo lo delegable.
 - **IA hizo bien:** Sniffer+latin-1 con test; topes 5MB/50k con mensajes; `@st.cache_data` en carga/tablas/cruces/chi² (27 verdes); US-18 palabras con test; xlsx exportado con test; logging de carga/export; placeholders→URLs reales; README con URL Cloud y sin "pendiente"; modelo por sesión (18/18); `REFLEXION.md` en 1-2 páginas.

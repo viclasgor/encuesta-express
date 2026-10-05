@@ -20,6 +20,10 @@ Cálculos deterministas con pandas/scipy. Sin LLM para calcular. Despliegue en S
 ## Stack
 - Python 3.10+, Streamlit==1.64.0, pandas==3.0.6, Plotly==7.1.0, openpyxl==3.1.5, fpdf2==2.8.9, scipy==1.18.1, pytest==9.1.1 (todo fijado en `requirements.txt`).
 
+## Capturas
+![Inicio](docs/capturas/01-inicio.png)
+![Informe](docs/capturas/02-informe.png)
+
 ## Ejecutar en local (plan B para la demo)
 ```powershell
 pip install -r requirements.txt
