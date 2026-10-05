@@ -6,9 +6,7 @@ Sube tu archivo y obtén: perfil de la muestra, tabla + gráfico por pregunta se
 
 Cálculos deterministas con pandas/scipy. Sin LLM para calcular. Despliegue en Streamlit Community Cloud; local como plan B.
 
-> URL Cloud: https://encuesta-express.streamlit.app
-> _(si tu URL es distinta, corrígela aquí)_
-
+> URL Cloud: [https://encuesta-express.streamlit.app](https://encuesta-express-yy5y7bsea6qyaejzvpbtge.streamlit.app/)
 ## Funcionalidades
 - Carga CSV (UTF-8 o latin-1; coma, punto y coma, tab o `|`, detectados) y .xlsx (primera hoja) + vista previa y n total; tope 5 MB / 50.000 filas.
 - Autodetección de tipos (timestamp, escala 1-5, única, múltiple, texto, email) con corrección manual e ignorado de columnas.
