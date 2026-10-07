@@ -11,7 +11,7 @@ esperadas ≥5), exportaciones (HTML con Plotly embebido, PDF dibujado con
 ruta caliente. Generó 27 tests (incluido render headless con AppTest),
 README, DESPLIEGUE, licencia MIT y el PROMPT-LOG con modelo por sesión.
 
-## 2. Qué hicimos nosotros
+## 2. Qué hice yo
 La idea fue mía: estudié Marketing y los Excel de las encuestas me daban
 quebraderos de cabeza, así que quise una web donde subir el CSV y obtener el
 informe. Yo le di el maquetado (estética de hoja, franja verde, barra `fx`,
@@ -22,7 +22,7 @@ código determinista (pandas/scipy), y por eso se pueden testear (`pytest -q`
 en verde en pantalla). Mientras programábamos yo hacía push a GitHub y lo
 comprobaba en Streamlit; analizaba los errores, se los decía y los corregíamos.
 
-## 3. Qué errores cometió la IA y cómo los detectamos
+## 3. Qué errores cometió la IA y cómo los detecté
 - **Edits que comían líneas** (`tabla_multiple` sin `def`, `col_esc` borrado).
   Detectado con `grep` + lectura antes de cada edición. Aprendizaje: verificar
   el hunk, no fiarse del "reemplazo correcto".
